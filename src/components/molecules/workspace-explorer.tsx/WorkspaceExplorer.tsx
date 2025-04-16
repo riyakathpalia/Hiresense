@@ -12,11 +12,18 @@ import {
   DropdownMenuTrigger,
 } from '@/components/atoms/dropdown-menu/Dropdown';
 import { useWorkspace } from '@/context/WorkspaceContext';
-import { Box, margin } from '@mui/system';
+import { Box } from '@mui/system';
 import WorkspaceUpload from '../workspace-upload/WorkspaceUpload';
 
-const FolderItem = ({ item, depth = 0 }: { item: any; depth?: number }) => {
+const FolderItem = ({ item, depth = 0, onDelete }: { item: any; depth?: number; onDelete?: (item: any) => void }) => {
   const [isOpen, setIsOpen] = useState(false);
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onDelete) {
+      onDelete(item);
+    }
+  };
 
   return (
     <Box sx={{ userSelect: 'none' }}>
@@ -40,7 +47,7 @@ const FolderItem = ({ item, depth = 0 }: { item: any; depth?: number }) => {
         <Folder style={{ height: 16, width: 16, marginRight: 8, color: 'var(--mui-palette-primary-main)' }} />
         <Box sx={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</Box>
         <DropdownMenu open={false}>
-          <DropdownMenuTrigger asChild onClick={(e:any) => e.stopPropagation()}>
+          <DropdownMenuTrigger asChild onClick={(e: any) => e.stopPropagation()}>
             <CustomButton
               variant="primary"
               size="small"
@@ -65,7 +72,10 @@ const FolderItem = ({ item, depth = 0 }: { item: any; depth?: number }) => {
               Upload
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem sx={{ display: 'flex', alignItems: 'center', gap: 2, color: 'error.main' }}>
+            <DropdownMenuItem
+              onClick={handleDelete}
+              sx={{ display: 'flex', alignItems: 'center', gap: 2, color: 'error.main' }}
+            >
               <Trash style={{ height: 16, width: 16 }} />
               Delete
             </DropdownMenuItem>
@@ -75,9 +85,9 @@ const FolderItem = ({ item, depth = 0 }: { item: any; depth?: number }) => {
       {isOpen && item.children && item.children.map((child: any, index: number) => (
         <Box key={index} className="group">
           {child.type === 'folder' ? (
-            <FolderItem item={child} depth={depth + 1} />
+            <FolderItem item={child} depth={depth + 1} onDelete={onDelete} />
           ) : (
-            <FileItem item={child} depth={depth + 1} />
+            <FileItem item={child} depth={depth + 1} onDelete={onDelete} />
           )}
         </Box>
       ))}
@@ -85,7 +95,14 @@ const FolderItem = ({ item, depth = 0 }: { item: any; depth?: number }) => {
   );
 };
 
-const FileItem = ({ item, depth = 0 }: { item: any; depth?: number }) => {
+const FileItem = ({ item, depth = 0, onDelete }: { item: any; depth?: number; onDelete?: (item: any) => void }) => {
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onDelete) {
+      onDelete(item);
+    }
+  };
+
   return (
     <Box
       sx={{
@@ -122,7 +139,7 @@ const FileItem = ({ item, depth = 0 }: { item: any; depth?: number }) => {
           <DropdownMenuItem>View</DropdownMenuItem>
           <DropdownMenuItem>Rename</DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem sx={{ color: 'error.main' }}>Delete</DropdownMenuItem>
+          <DropdownMenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>Delete</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </Box>
@@ -130,21 +147,42 @@ const FileItem = ({ item, depth = 0 }: { item: any; depth?: number }) => {
 };
 
 interface WorkspaceExplorerProps {
-  onJDUploadSuccess?:(response: any) => void;
+  onDocumentUploadSuccess?: (response: any) => void;
+  onDeleteFile?: (item: any) => void;
+  onDeleteFolder?: (item: any) => void;
 }
 
-const WorkspaceExplorer: React.FC<WorkspaceExplorerProps>  = ({ onJDUploadSuccess }) => {
-  const [activeView, setActiveView] = useState<'files' | 'chat'>('files');
+const WorkspaceExplorer: React.FC<WorkspaceExplorerProps> = ({ onDocumentUploadSuccess, onDeleteFile, onDeleteFolder }) => {
+  const [activeTab, setActiveTab] = useState<'documents'>('documents');
   const { activeWorkspace } = useWorkspace();
 
-  // Helper functions to check if there's any content
-  const hasResumes = false // activeWorkspace?.folders?.some(f => f.type === 'resume') ?? false;
-  const hasJDs = false //activeWorkspace?.folders?.some(f => f.type === 'jd') ?? false;
+  const hasDocuments = activeWorkspace?.folders?.some(f => f.type === 'resume' || f.type === 'jd') ?? false;
+
+  const handleFileUploadSuccess = (response: any) => {
+    if (onDocumentUploadSuccess) {
+      onDocumentUploadSuccess(response);
+    }
+  };
+
+  const handleDeleteItem = (item: any) => {
+    console.log('Deleting item:', item);
+    if (item.type === 'folder' && onDeleteFolder) {
+      onDeleteFolder(item);
+      // After deleting, you might need to fetch updated workspace data
+      // or update the local state to reflect the deletion.
+    } else if (item.type === 'file' && onDeleteFile) {
+      onDeleteFile(item);
+      // Similarly, update local state or fetch data after deletion.
+    }
+    // If you're managing the workspace data locally in the context,
+    // you might need to call a function from the context to update it.
+    // Example: updateWorkspace(updatedWorkspaceData);
+  };
 
   return (
     <Box sx={{
-      border:1,
-      borderRadius:2,
+      border: 1,
+      borderRadius: 2,
       borderColor: 'divider',
     }}>
       <CardHeader>
@@ -153,7 +191,7 @@ const WorkspaceExplorer: React.FC<WorkspaceExplorerProps>  = ({ onJDUploadSucces
             <CardTitle>
               <Box sx={{ fontSize: '1.125rem' }}>File Explorer</Box>
             </CardTitle>
-            {/* <CustomButton variant="outline" size="small">/
+            {/* <CustomButton variant="outline" size="small">
               <Plus style={{ height: 16, width: 16, marginRight: 2 }} />
               Add Folder
             </CustomButton> */}
@@ -161,47 +199,33 @@ const WorkspaceExplorer: React.FC<WorkspaceExplorerProps>  = ({ onJDUploadSucces
         </Box>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="jds" >
-          <TabsList >
-            <TabsTrigger value="resumes">Resume</TabsTrigger>
-            <TabsTrigger value="jds">Job Descriptions</TabsTrigger>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList>
+            <TabsTrigger value="documents">Medical Documents</TabsTrigger>
           </TabsList>
 
-           <TabsContent value="resumes">
-            <ScrollArea style={{ height: 'calc(100vh - 20rem)', display: 'flex', flexDirection: 'column', border: 1 }}>
-              {hasResumes ? (
-                <Box sx={{ '& > * + *': { mt: 1 } }}>
-                  {activeWorkspace?.folders
-                    .filter(f => f.type === 'resume')
-                    .map((folder, index) => (
-                      <FolderItem key={index} item={folder} />
-                    ))}
-                </Box>
-              ) : (
-                <WorkspaceUpload type='resume'/>
-
-              )}
-            </ScrollArea>
-          </TabsContent>
-          <TabsContent value="jds">
+          <TabsContent value="documents">
             <ScrollArea style={{ height: 'calc(100vh - 20rem)' }}>
-              {hasJDs ? (
+              {hasDocuments ? (
                 <Box sx={{ '& > * + *': { mt: 1 } }}>
                   {activeWorkspace?.folders
-                    .filter(f => f.type === 'jd')
+                    .filter(f => f.type === 'resume' || f.type === 'jd')
                     .map((folder, index) => (
-                      <FolderItem key={index} item={folder} />
+                      <FolderItem key={index} item={folder} onDelete={handleDeleteItem} />
+                    ))}
+                  {activeWorkspace?.files
+                    .filter(f => f.type === 'medicalDocument')
+                    .map((file: { name: string; type: string }, index) => (
+                      <FileItem key={index} item={file} onDelete={handleDeleteItem} />
                     ))}
                 </Box>
               ) : (
-                //renderEmptyState('jd')
-                <WorkspaceUpload type='jobDescription' onUploadSuccess={(response) => {
-                  console.log('Response from WorkspaceUpload:', response);
-                  if (onJDUploadSuccess) {
-                    onJDUploadSuccess(response); // Pass the response to WorkspacePage
-                  }
-                }}/>
-
+                <WorkspaceUpload 
+                  type='medicalDocument' 
+                  onUploadSuccess={handleFileUploadSuccess} 
+                  uploadHandler={() => { /* Add your upload logic here */ }} 
+                  uploadUrlHandler={() => { /* Add your upload URL logic here */ }} 
+                />
               )}
             </ScrollArea>
           </TabsContent>

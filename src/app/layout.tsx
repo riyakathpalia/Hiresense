@@ -1,13 +1,11 @@
-import type { Metadata } from "next";
-import AppThemeProvider from "@/providers/AppThemeProivder";
-import "./globals.css";
+import AppThemeProvider from "@/providers/AppThemeProvider";
 import { Box } from "@mui/material";
-import { HireSenseProvider } from '@/context/HireSenseContext';
-
+import type { Metadata } from "next";
+import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "HireSense",
-  description: "Created by Souvik Bhattacharya",
+  title: "MetProAi",
+  description: "Your AI assistant for medical analysis and conversation",
 };
 
 export default function RootLayout({
@@ -15,19 +13,14 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-
-  
   return (
     <html lang="en" suppressHydrationWarning={true}>
       <body
         className={`antialiased`}>
         <AppThemeProvider >
-
           <Box>
             <main>
-              <HireSenseProvider>
-                {children}
-              </HireSenseProvider>
+              {children}
             </main>
           </Box>
         </AppThemeProvider>

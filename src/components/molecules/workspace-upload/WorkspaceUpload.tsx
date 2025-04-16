@@ -3,7 +3,7 @@ import {
   Upload as UploadIcon,
   X,
   FileText,
-  FileInput
+  Link
 } from 'lucide-react';
 import {
   Card,
@@ -16,58 +16,30 @@ import {
   ListItemIcon,
   ListItemText,
   IconButton,
-  styled
+  TextField
 } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { CardFooter } from '../Card/Card';
-import { useHireSenseContext } from '@/context/HireSenseContext';
 import { handleFileInputChange } from '@/utils/fileUtils';
 import CustomButton from '@/components/atoms/button/CustomButton';
 import { useWorkspace } from '@/context/WorkspaceContext';
 
-// Upload Folder Styled DropZone
-const StyledDropZone = styled('div')(({ theme }) => ({
-  border: '2px dashed',
-  borderColor: theme.palette.divider,
-  borderRadius: theme.shape.borderRadius,
-  padding: theme.spacing(2),
-  textAlign: 'center',
-  cursor: 'pointer',
-  '&:hover': {
-    backgroundColor: theme.palette.action.hover
-  },
-  transition: theme.transitions.create('background-color')
-}));
-
-type UploadType = 'resume' | 'jobDescription';
+type UploadType = 'medicalDocument' | 'patientDocument';
 
 interface WorkspaceUploadProps {
   type: UploadType;
   onUploadSuccess?: (response: any) => void;
+  uploadHandler: (files: File[], workspaceName: string) => Promise<any>; // Expecting this prop
+  uploadUrlHandler: (url: string, workspaceName: string) => Promise<any>; // Handler for URL upload
 }
 
-const traverseFileTree = (item: any, fileList: File[]) => {
-  if (item.isFile) {
-    item.file((file: File) => {
-      fileList.push(file);
-    });
-  } else if (item.isDirectory) {
-    const dirReader = item.createReader();
-    dirReader.readEntries((entries: any[]) => {
-      for (const entry of entries) {
-        traverseFileTree(entry, fileList);
-      }
-    });
-  }
-};
-
-const WorkspaceUpload: React.FC<WorkspaceUploadProps> = ({ type, onUploadSuccess }) => {
+const WorkspaceUpload: React.FC<WorkspaceUploadProps> = ({ type, onUploadSuccess, uploadHandler, uploadUrlHandler }) => {
   const { activeWorkspace } = useWorkspace();
   const { enqueueSnackbar } = useSnackbar();
-  const { resumes, jobDescriptions } = useHireSenseContext();
-  const [files, setFiles] = useState<File[]>([]); // Scoped to each instance
+  const [files, setFiles] = useState<File[]>([]); // For file uploads
   const [uploading, setUploading] = useState(false);
-  const [isFolderMode, setIsFolderMode] = useState(false); // Toggle between file and folder mode
+  const [url, setUrl] = useState(''); // For URL input
+  const [isUploadingUrl, setIsUploadingUrl] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -76,62 +48,88 @@ const WorkspaceUpload: React.FC<WorkspaceUploadProps> = ({ type, onUploadSuccess
     }
   };
 
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-  };
-
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    const items = e.dataTransfer.items;
-    const files: File[] = [];
-
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i].webkitGetAsEntry();
-      if (item) {
-        traverseFileTree(item, files);
-      }
+    if (e.dataTransfer.files) {
+      const newFiles = Array.from(e.dataTransfer.files);
+      setFiles((prev) => [...prev, ...newFiles]);
     }
+  };
 
-    // Update the state after processing all files
-    setTimeout(() => {
-      setFiles((prev) => [...prev, ...files]);
-    }, 100); // Delay to ensure all files are processed
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
   };
 
   const removeFile = (index: number) => {
     setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleUpload = async () => {
-    console.log('Uploading files:(type)', typeof(files));
+  const handleFileUpload = async () => {
     if (files.length === 0) {
-      enqueueSnackbar(`Please select at least one ${type === 'resume' ? 'resume' : 'job description'} to upload.`, {
+      enqueueSnackbar(`Please select at least one ${type === 'medicalDocument' ? 'medical' : 'patient'} document to upload.`, {
         variant: 'error',
       });
       return;
     }
 
-    const uploadHandler = type === 'resume' ? resumes.uploadResumes : jobDescriptions.uploadJobDescriptions;
     setUploading(true);
 
     try {
       const response = await handleFileInputChange(files, uploadHandler, activeWorkspace?.name || 'defaultWorkspace');
-      console.log(`${type} Upload response:`, response);
+      console.log(`${type} File Upload response:`, response);
 
       if (onUploadSuccess) {
         onUploadSuccess(response);
       }
 
-      enqueueSnackbar(`${type === 'resume' ? 'Resumes' : 'Job descriptions'} uploaded successfully!`, {
+      enqueueSnackbar(`${type === 'medicalDocument' ? 'Medical' : 'Patient'} documents uploaded successfully to MetProAi!`, {
         variant: 'success',
       });
       setFiles([]); // Clear files after successful upload
     } catch (error) {
-      console.error('Upload error:', error);
-      enqueueSnackbar(`Failed to upload ${type === 'resume' ? 'resumes' : 'job descriptions'}.`, { variant: 'error' });
+      console.error('File Upload error:', error);
+      enqueueSnackbar(`Failed to upload ${type === 'medicalDocument' ? 'medical' : 'patient'} documents to MetProAi.`, { variant: 'error' });
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUrl(e.target.value);
+  };
+
+  const handleUrlUpload = async () => {
+    if (!url.trim()) {
+      enqueueSnackbar(`Please enter a valid URL to upload to MetProAi.`, { variant: 'error' });
+      return;
+    }
+
+    setIsUploadingUrl(true);
+
+    try {
+      const response = await uploadUrlHandler(url, activeWorkspace?.name || 'defaultWorkspace');
+      console.log(`${type} URL Upload response:`, response);
+
+      if (onUploadSuccess) {
+        onUploadSuccess(response);
+      }
+
+      enqueueSnackbar(`${type === 'medicalDocument' ? 'Medical' : 'Patient'} document from URL uploaded successfully to MetProAi!`, {
+        variant: 'success',
+      });
+      setUrl(''); // Clear URL after successful upload
+    } catch (error) {
+      console.error('URL Upload error:', error);
+      enqueueSnackbar(`Failed to upload ${type === 'medicalDocument' ? 'medical' : 'patient'} document from URL to MetProAi.`, { variant: 'error' });
+    } finally {
+      setIsUploadingUrl(false);
+    }
+  };
+
+  const getDragDropText = () => {
+    return type === 'medicalDocument'
+      ? 'Drag and drop medical files here or click to browse'
+      : 'Drag and drop patient files here or click to browse';
   };
 
   return (
@@ -139,7 +137,7 @@ const WorkspaceUpload: React.FC<WorkspaceUploadProps> = ({ type, onUploadSuccess
       <CardHeader
         title={
           <Typography variant="h6" component="div" color="white">
-            {type === 'resume' ? 'Upload Resumes' : 'Upload Job Descriptions'}
+            Upload {type === 'medicalDocument' ? 'Medical' : 'Patient'} Documents to MetProAi
           </Typography>
         }
         sx={{
@@ -148,43 +146,43 @@ const WorkspaceUpload: React.FC<WorkspaceUploadProps> = ({ type, onUploadSuccess
         }}
       />
       <CardContent>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-          <Typography variant="subtitle2">
-            {isFolderMode ? 'Folder Mode Enabled' : 'File Mode Enabled'}
-          </Typography>
-          <CustomButton
-            variant="outline"
-            size="small"
-            onClick={() => setIsFolderMode((prev) => !prev)}
-          >
-            {isFolderMode ? 'Switch to File Mode' : 'Switch to Folder Mode'}
-          </CustomButton>
-        </Box>
-        <StyledDropZone
+        <Typography variant="subtitle1" gutterBottom color="textSecondary">
+          Upload Files
+        </Typography>
+        <Box
+          border={1}
+          borderColor="divider"
+          borderRadius="md"
+          padding={2}
+          textAlign="center"
           onDragOver={handleDragOver}
           onDrop={handleDrop}
+          sx={{
+            cursor: 'pointer',
+            '&:hover': {
+              backgroundColor: 'action.hover',
+            },
+          }}
           onClick={() => document.getElementById(`workspace-input-${type}`)?.click()}
         >
           <input
             id={`workspace-input-${type}`}
             type="file"
             multiple
-            {...(isFolderMode ? { webkitdirectory: 'true' } : {})} // Dynamically add webkitdirectory
-            accept={type === 'resume' ? '.pdf,.docx,.doc,.rtf,.txt' : '.pdf,.docx,.doc,.txt'}
+            accept={type === 'medicalDocument' ? '.pdf,.docx,.doc,.txt' : '.pdf,.docx,.doc,.txt'}
             style={{ display: 'none' }}
             onChange={handleFileChange}
           />
-          <Typography variant="h6" gutterBottom>
-            Drop {type === 'resume' ? 'resumes' : 'job descriptions'} here or click to browse{' '}
-            {isFolderMode ? 'folders' : 'files'}
+          <UploadIcon size={48} color="primary" />
+          <Typography variant="body2" color="textSecondary" mt={1}>
+            {getDragDropText()}
           </Typography>
-        </StyledDropZone>
-        
-        {/* // List of files that are going to be uploaded */}
+        </Box>
+
         {files.length > 0 && (
           <Box mt={2}>
             <Typography variant="subtitle2" gutterBottom>
-              Selected {type === 'resume' ? 'resumes' : 'job descriptions'} ({files.length})
+              Selected Files for MetProAi ({files.length})
             </Typography>
             <List
               dense
@@ -212,7 +210,7 @@ const WorkspaceUpload: React.FC<WorkspaceUploadProps> = ({ type, onUploadSuccess
                   sx={{ py: 0.5 }}
                 >
                   <ListItemIcon sx={{ minWidth: 32 }}>
-                    {type === 'resume' ? <FileText size={16} color="primary" /> : <FileInput size={16} color="primary" />}
+                    {type === 'medicalDocument' ? <FileText size={16} color="primary" /> : <FileText size={16} color="primary" />}
                   </ListItemIcon>
                   <ListItemText
                     primary={file.name}
@@ -223,25 +221,47 @@ const WorkspaceUpload: React.FC<WorkspaceUploadProps> = ({ type, onUploadSuccess
             </List>
           </Box>
         )}
+
+        <Typography variant="subtitle1" gutterBottom mt={3} color="textSecondary">
+          Upload from URL to MetProAi
+        </Typography>
+        <TextField
+          fullWidth
+          label="Enter Document URL"
+          variant="outlined"
+          value={url}
+          onChange={handleUrlChange}
+          sx={{ mb: 2 }}
+        />
       </CardContent>
       <CardFooter>
-        <Box display="flex" gap={1}>
+        <Box display="flex" justifyContent="space-between" width="100%" gap={1}>
           <CustomButton
             variant="outline"
             onClick={() => setFiles([])}
             disabled={files.length === 0}
             size="small"
           >
-            Clear All
+            Clear Files
           </CustomButton>
           <CustomButton
             variant="primary"
-            onClick={handleUpload}
+            onClick={handleFileUpload}
             disabled={files.length === 0 || uploading}
             startIcon={!uploading && <UploadIcon size={16} />}
             size="small"
           >
-            {uploading ? `Uploading ${type === 'resume' ? 'resumes' : 'job descriptions'}...` : `Upload`}
+            {uploading ? `Uploading to MetProAi...` : `Upload Files`}
+          </CustomButton>
+          <CustomButton
+            variant="primary"
+            color="primary"
+            onClick={handleUrlUpload}
+            disabled={!url.trim() || isUploadingUrl}
+            startIcon={!isUploadingUrl && <Link size={16} />}
+            size="small"
+          >
+            {isUploadingUrl ? `Uploading from URL to MetProAi...` : `Upload from URL`}
           </CustomButton>
         </Box>
       </CardFooter>

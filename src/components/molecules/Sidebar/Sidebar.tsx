@@ -1,5 +1,5 @@
 "use client";
-import { Drawer, List, ListItemButton, ListItemIcon, ListItemText, IconButton, Divider, Box, Typography } from '@mui/material';
+import { Drawer, List, ListItemButton, ListItemIcon, ListItemText, IconButton, Divider, Box, Typography, Dialog, DialogTitle, DialogContent, TextField, DialogActions } from '@mui/material';
 import {
   Menu as MenuIcon,
   ArrowLeft as ArrowLeftIcon,
@@ -20,9 +20,10 @@ import Image from 'next/image';
 import { useWorkspace } from '@/context/WorkspaceContext';
 import { useState } from 'react';
 import { Add, Folder, KeyboardArrowDown } from '@mui/icons-material';
+import { useToast } from '@/lib/hooks/useToast';
 
 const navItems = [
-  { title: 'Home', icon: <HomeIcon size={20} />, path: '/home' },
+  { title: 'Home', icon: <HomeIcon size={20} />, path: '/' }, // Ensure path is '/'
   { title: 'Dashboard', icon: <DashboardIcon size={20} />, path: '/dashboard' },
   //{ title: 'CV Categories', icon: <CategoryIcon size={20} />, path: 'dashboard/categories' },
   // { title: 'Candidates', icon: <PersonIcon size={20} />, path: 'dashboard/candidates' },
@@ -33,9 +34,42 @@ const navItems = [
 const Sidebar = () => {
   const router = useRouter();
   const { isOpen, toggleSidebar } = useSidebar();
-  const { workspaces, activeWorkspace, setActiveWorkspace } = useWorkspace();
+  const { workspaces, activeWorkspace, setActiveWorkspace, addWorkspace } = useWorkspace();
   const [isWorkspacesExpanded, setIsWorkspacesExpanded] = useState(true);
   const pathname = usePathname();
+  const [isNewWorkspaceDialogOpen, setIsNewWorkspaceDialogOpen] = useState(false);
+  const [newWorkspaceName, setNewWorkspaceName] = useState('');
+  const { toast } = useToast();
+
+  const handleCreateWorkspace = () => {
+    if (newWorkspaceName.trim() === '') {
+      toast({
+        title: "Error",
+        description: "Workspace name cannot be empty",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const newWorkspace = {
+      id: `ws-${Date.now()}`,
+      name: newWorkspaceName,
+      folders: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      collaborators: []
+    };
+
+    addWorkspace(newWorkspace);
+    setActiveWorkspace(newWorkspace);
+    setNewWorkspaceName('');
+    setIsNewWorkspaceDialogOpen(false);
+
+    toast({
+      title: "Success",
+      description: `Workspace "${newWorkspaceName}" created successfully`,
+    });
+  };
 
   return (
     <>
@@ -84,7 +118,7 @@ const Sidebar = () => {
 
             {isOpen ? (
               <Typography variant="h6" color='DodgerBlue.main' sx={{ fontWeight: "bold" }}>
-                HireSense
+                MetProAi
               </Typography>
             ) : (
               <Box
@@ -101,7 +135,7 @@ const Sidebar = () => {
                   cursor: "pointer"
                 }}
               >
-                HS
+                MP
               </Box>
             )}
           </Box>
@@ -159,7 +193,7 @@ const Sidebar = () => {
             )}
           </Box>
 
-          {isWorkspacesExpanded && isOpen && (
+          {isWorkspacesExpanded && (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               {workspaces.map((workspace) => (
                 <CustomButton
@@ -208,7 +242,7 @@ const Sidebar = () => {
                   mt: 1,
                   textTransform: 'none'
                 }}
-                onClick={() => router.push('/workspace')}
+                onClick={() => setIsNewWorkspaceDialogOpen(true)}
               >
                 <Add sx={{ mr: 2, fontSize: 20 }} />
                 New Workspace
@@ -272,8 +306,8 @@ const Sidebar = () => {
           justifyItems: "center",
         }}>
           <Image
-            src="/DataSense Logo-1.png" // Path to the image
-            alt="Logo Image"
+            src="/Caze MeTPro AI.png" // Path to the image
+            alt="MetProAi Logo"
             width={150} // Set width
             height={150} // Set height
             priority // Loads image immediately
@@ -309,6 +343,33 @@ const Sidebar = () => {
       >
         <MenuIcon />
       </CustomButton>
+
+      {/* New Workspace Dialog */}
+      <Dialog open={isNewWorkspaceDialogOpen} onClose={() => setIsNewWorkspaceDialogOpen(false)}>
+        <DialogTitle>Create New Workspace</DialogTitle>
+        <DialogContent sx={{ py: 3 }}>
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="subtitle2" gutterBottom>
+              Workspace Name
+            </Typography>
+            <TextField
+              fullWidth
+              placeholder="Enter workspace name"
+              value={newWorkspaceName}
+              onChange={(e) => setNewWorkspaceName(e.target.value)}
+              autoFocus
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <CustomButton variant="outline" onClick={() => setIsNewWorkspaceDialogOpen(false)}>
+            Cancel
+          </CustomButton>
+          <CustomButton variant="primary" onClick={handleCreateWorkspace}>
+            Create Workspace
+          </CustomButton>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };

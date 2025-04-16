@@ -1,7 +1,7 @@
 import Sidebar from "@/components/molecules/Sidebar/Sidebar";
 import { SidebarProvider } from "@/context/SidebarContext";
 import { WorkspaceProvider } from "@/context/WorkspaceContext";
-import AppThemeProvider from "@/providers/AppThemeProivder";
+import AppThemeProvider from "@/providers/AppThemeProvider";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -11,7 +11,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <SidebarProvider>
             {/* Sidebar remains static */}
             <Sidebar />
-            {/* Main content area */}
+            {/* Main content area for MetProAi */}
             <main className="flex-1 p-6 overflow-auto">
               {children}
             </main>

@@ -1,10 +1,11 @@
-"use client"
-import React, { useState } from "react";
+"use client";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Typography,
   TextField,
   IconButton,
   Divider,
+  Box,
 } from "@mui/material";
 import { Send } from "@mui/icons-material";
 import { styled } from "@mui/system";
@@ -16,13 +17,14 @@ interface Message {
   timestamp: Date;
 }
 
-const ChatContainer = styled("div")({
+const ChatContainer = styled(Box)({
   display: "flex",
   flexDirection: "column",
-  height: "100vh",
-  maxWidth: "900px",
-  margin: "auto",
+  height: "100%", // Changed from 100vh to fit within the layout
+  maxWidth: "100%", // Adjusted max width
+  margin: "0 auto",
   padding: "16px",
+  flexGrow: 1, // Make it grow within the parent
 });
 
 const MessageList = styled("div")({
@@ -31,21 +33,30 @@ const MessageList = styled("div")({
   padding: "8px",
 });
 
-const MessageBubble = styled("div")<{ isUser: boolean }>(({ isUser }) => ({
+const MessageBubble = styled(Box)<{ isUser: boolean }>(({ isUser, theme }) => ({
   maxWidth: "75%",
   padding: "12px",
   borderRadius: "8px",
-  backgroundColor: isUser ? "#1976d2" : "#e0e0e0",
-  color: isUser ? "#ffffff" : "#000000",
+  backgroundColor: isUser ? theme.palette.primary.main : theme.palette.grey[300],
+  color: isUser ? theme.palette.primary.contrastText : theme.palette.text.primary,
   alignSelf: isUser ? "flex-end" : "flex-start",
   margin: "4px 0",
 }));
 
 const ChatPage = () => {
   const [messages, setMessages] = useState<Message[]>([
-    { id: "1", content: "Hello! How can I help you?", isUser: false, timestamp: new Date() },
+    { id: "1", content: "Hello! How can MetProAi assist you today?", isUser: false, timestamp: new Date() },
   ]);
   const [input, setInput] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,7 +76,7 @@ const ChatPage = () => {
     setTimeout(() => {
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
-        content: "This is a placeholder AI response.",
+        content: "This is a placeholder response from MetProAi.",
         isUser: false,
         timestamp: new Date(),
       };
@@ -75,21 +86,22 @@ const ChatPage = () => {
 
   return (
     <ChatContainer>
-      <Typography variant="h5" gutterBottom>
-        Chat with AI
+      <Typography variant="h6" gutterBottom>
+        Chat with MetProAi
       </Typography>
-      <Divider />
+      <Divider sx={{ mb: 2 }} />
       <MessageList>
         {messages.map((message) => (
           <MessageBubble key={message.id} isUser={message.isUser}>
             <Typography variant="body2">{message.content}</Typography>
-            <Typography variant="caption" sx={{ opacity: 0.7 }}>
+            <Typography variant="caption" sx={{ opacity: 0.7, display: 'block', mt: 0.5 }}>
               {message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
             </Typography>
           </MessageBubble>
         ))}
+        <div ref={messagesEndRef} />
       </MessageList>
-      <Divider />
+      <Divider sx={{ mt: 2 }} />
       <form onSubmit={handleSendMessage} style={{ display: "flex", padding: "8px" }}>
         <TextField
           fullWidth
@@ -106,4 +118,4 @@ const ChatPage = () => {
   );
 };
 
-
+export default ChatPage;
