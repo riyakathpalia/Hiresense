@@ -19,9 +19,10 @@ import {
 } from '@mui/material';
 import { useToast } from '@/lib/hooks/useToast';
 import { useWorkspace } from '@/context/WorkspaceContext';
-import HireSenseAPI from '@/lib/api/axios-config';
 import WorkspaceSelector from '../Workspace-Selector/WorkspaceSelector';
 import CustomButton from '@/components/atoms/button/CustomButton';
+import { ChatApi } from '@/lib/api/chatApi'; // Import our ChatApi
+import { useChat } from '@/lib/hooks/useChat'; // Import our chat hook
 
 interface MessageType {
   id: string;
@@ -58,8 +59,8 @@ const WorkspaceChat: React.FC<WorkspaceChatProps> = ({ aiResponse }) => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  // Initialize with welcome message
   useEffect(() => {
-    // Initialize with a welcome message based on the active workspace name
     if (activeWorkspace?.name) {
       setMessages([
         {
@@ -70,7 +71,6 @@ const WorkspaceChat: React.FC<WorkspaceChatProps> = ({ aiResponse }) => {
         },
       ]);
     } else {
-      // Fallback message if no active workspace name is available
       setMessages([
         {
           id: createId(),
@@ -82,9 +82,9 @@ const WorkspaceChat: React.FC<WorkspaceChatProps> = ({ aiResponse }) => {
     }
   }, [activeWorkspace]);
 
+  // Handle aiResponse prop updates
   useEffect(() => {
     if (aiResponse) {
-      // Add AI response to messages
       const aiMessage: MessageType = {
         id: createId(),
         ChatResponse: aiResponse,
@@ -92,11 +92,27 @@ const WorkspaceChat: React.FC<WorkspaceChatProps> = ({ aiResponse }) => {
         timestamp: new Date(),
       };
       setMessages((prevMessages) => [...prevMessages, aiMessage]);
-      if (scrollAreaRef.current) {
-        scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
-      }
+      scrollToBottom();
     }
   }, [aiResponse]);
+
+  const scrollToBottom = () => {
+    if (scrollAreaRef.current) {
+      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
+    }
+  };
+
+  // Send message to API
+  const sendChatMessage = async (message: string, isJdSearch: boolean = false) => {
+    try {
+      // Using our ChatApi from the centralized API service
+      const response = await ChatApi.sendMessage(message);
+      return response;
+    } catch (error) {
+      console.error('Error sending message:', error);
+      throw error;
+    }
+  };
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,16 +134,14 @@ const WorkspaceChat: React.FC<WorkspaceChatProps> = ({ aiResponse }) => {
     setIsLoading(true);
 
     try {
-      // Make API call to send chat message
-      // We're assuming the workspace context might inform if we're looking at job descriptions
+      // Make API call to send chat message using our API service
       const jdSearch = activeWorkspace?.type === 'jd' || false;
-      const response = await HireSenseAPI.sendChatMessage(userMessage.ChatResponse, jdSearch);
-      console.log("Response from API:", typeof (response));
-
+      const response = await sendChatMessage(userMessage.ChatResponse, jdSearch);
+      
       // Create AI response object
       const aiResponse: MessageType = {
         id: createId(),
-        ChatResponse: response.summary || "No summary available",
+        ChatResponse: response.data?.reply || "No response available",
         isUser: false,
         timestamp: new Date(),
       };
@@ -135,6 +149,7 @@ const WorkspaceChat: React.FC<WorkspaceChatProps> = ({ aiResponse }) => {
       // Update messages with AI response
       const newMessages = [...updatedMessages, aiResponse];
       setMessages(newMessages);
+      scrollToBottom();
 
       // Handle chat history management
       if (!activeChatId) {
@@ -206,34 +221,24 @@ const WorkspaceChat: React.FC<WorkspaceChatProps> = ({ aiResponse }) => {
     setIsLoading(true);
 
     try {
-      // Make API call for keyword-based chat
-      const response = await HireSenseAPI.sendKeywordChat(keyword);
+      // We'd need to add a keywordSearch method to our ChatApi
+      // For now, we'll use the standard sendMessage method
+      const response = await ChatApi.sendMessage(`Search for keyword: ${keyword}`);
 
       // Create AI response
       const aiResponse: MessageType = {
         id: createId(),
-        ChatResponse: response.reply,
+        ChatResponse: response.data?.reply || "No response available",
         isUser: false,
         timestamp: new Date(),
       };
 
       // Update messages with AI response
       setMessages([...updatedMessages, aiResponse]);
+      scrollToBottom();
 
-      // Handle showing matched candidates if available
-      if (response.matched_candidates && response.matched_candidates.length > 0) {
-        // You could format and display matched candidates here
-        // For example, append them to the AI response
-        // This is a simplified example
-        const candidatesMessage: MessageType = {
-          id: createId(),
-          ChatResponse: `Matched candidates: ${response.matched_candidates.map(c => `${c.name} (Score: ${c.relevance_score})`).join(', ')}`,
-          isUser: false,
-          timestamp: new Date(),
-        };
-
-        setMessages(prev => [...prev, candidatesMessage]);
-      }
+      // If there's any candidate matching functionality, it would be processed here
+      // Based on the response structure from the API
 
     } catch (error) {
       console.error('Error in keyword chat:', error);
@@ -285,15 +290,7 @@ const WorkspaceChat: React.FC<WorkspaceChatProps> = ({ aiResponse }) => {
         if (activeWorkspace?.type === 'resume' && activeWorkspace?.filePath) {
           // Start a summary request
           if (typeof activeWorkspace.filePath === 'string') {
-            if (typeof activeWorkspace.filePath === 'string') {
-              handleSummaryRequest(activeWorkspace.filePath);
-            } else {
-              toast({
-                title: "Invalid File Path",
-                description: "The file path is not valid or missing.",
-                variant: "destructive",
-              });
-            }
+            handleSummaryRequest(activeWorkspace.filePath);
           } else {
             toast({
               title: "Invalid File Path",
@@ -336,32 +333,22 @@ const WorkspaceChat: React.FC<WorkspaceChatProps> = ({ aiResponse }) => {
     setIsLoading(true);
 
     try {
-      // Make API call to get CV summary
-      const response = await HireSenseAPI.getCVSummary(filePath);
+      // For CV summary, we could extend our API to include a getCVSummary method
+      // For now, we'll use the sendMessage method with a specific instruction
+      const response = await ChatApi.sendMessage(`Generate a summary of the resume at: ${filePath}`);
 
       // Create AI response with summary
       const summaryResponse: MessageType = {
         id: createId(),
-        ChatResponse: response.summary || "No summary available",
+        ChatResponse: response.data?.reply || "No summary available",
         isUser: false,
         timestamp: new Date(),
       };
 
-      // Create skills response if available
-      let newMessages = [...updatedMessages, summaryResponse];
-
-      if (response.skills && response.skills.length > 0) {
-        const skillsResponse: MessageType = {
-          id: createId(),
-          ChatResponse: `Key skills: ${response.skills.join(', ')}`,
-          isUser: false,
-          timestamp: new Date(),
-        };
-
-        newMessages = [...newMessages, skillsResponse];
-      }
-
+      // Update messages with the summary
+      const newMessages = [...updatedMessages, summaryResponse];
       setMessages(newMessages);
+      scrollToBottom();
 
       // Update chat history
       if (!activeChatId) {
@@ -421,7 +408,6 @@ const WorkspaceChat: React.FC<WorkspaceChatProps> = ({ aiResponse }) => {
       border: 1,
       borderRadius: 2,
       borderColor: 'divider',
-
     }}>
       {/* Chat History Sidebar */}
       {showHistory && (
@@ -537,7 +523,6 @@ const WorkspaceChat: React.FC<WorkspaceChatProps> = ({ aiResponse }) => {
               sx={{
                 display: 'flex',
                 justifyContent: message.isUser ? 'flex-end' : 'flex-start',
-
               }}
             >
               <Paper
