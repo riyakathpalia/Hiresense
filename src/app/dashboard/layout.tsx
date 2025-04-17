@@ -12,7 +12,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {/* Sidebar remains static */}
             <Sidebar />
             {/* Main content area for MetProAi */}
-            <main className="flex-1 p-6 overflow-auto">
+            <main className="flex-1 overflow-auto">
               {children}
             </main>
           </SidebarProvider>
