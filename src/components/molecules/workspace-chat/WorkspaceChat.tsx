@@ -105,9 +105,8 @@ const WorkspaceChat: React.FC<WorkspaceChatProps> = ({ aiResponse }) => {
   // Send message to API
   const sendChatMessage = async (message: string, isJdSearch: boolean = false) => {
     try {
-      // Using our ChatApi from the centralized API service
       const response = await ChatApi.sendMessage(message);
-      return response;
+      return response; 
     } catch (error) {
       console.error('Error sending message:', error);
       throw error;
@@ -134,14 +133,15 @@ const WorkspaceChat: React.FC<WorkspaceChatProps> = ({ aiResponse }) => {
     setIsLoading(true);
 
     try {
-      // Make API call to send chat message using our API service
+      // Make API call - response type is now ChatApiResponse
       const jdSearch = activeWorkspace?.type === 'jd' || false;
       const response = await sendChatMessage(userMessage.ChatResponse, jdSearch);
       
       // Create AI response object
       const aiResponse: MessageType = {
         id: createId(),
-        ChatResponse: response.data?.reply || "No response available",
+        // Use type assertion via unknown, as recommended by linter
+        ChatResponse: (response as unknown as { response: string })?.response || "No response available", 
         isUser: false,
         timestamp: new Date(),
       };

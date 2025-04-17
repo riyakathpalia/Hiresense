@@ -23,38 +23,10 @@ export const ChatApi = {
     });
   },
   
-  /**
-   * Get a summary of a CV/resume
-   * @param {string} filePath - Path to the resume file
-   * @returns {Promise} - API response with resume summary
-   */
-  getCVSummary: (filePath: string) => {
-    return API.post('/chat', {
-      message: `Generate a summary of the resume at: ${filePath}`
-    });
-  },
+
   
-  /**
-   * Find job matches for a resume
-   * @param {string} resumeId - ID of the resume
-   * @returns {Promise} - API response with job matches
-   */
-  findJobMatches: (resumeId: string) => {
-    return API.post('/chat', {
-      message: `Find job matches for resume ID: ${resumeId}`
-    });
-  },
-  
-  /**
-   * Find candidate matches for a job
-   * @param {string} jobId - ID of the job
-   * @returns {Promise} - API response with candidate matches
-   */
-  findCandidateMatches: (jobId: string) => {
-    return API.post('/chat', {
-      message: `Find candidate matches for job ID: ${jobId}`
-    });
-  }
 };
+
+
 
 export default ChatApi;

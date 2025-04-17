@@ -5,10 +5,10 @@ import API from './axios-config';
 export const PatientDocumentsApi = {
   /**
    * Upload multiple patient documents from file paths
-   * @param {Array} filePaths - Array of file paths
+   * @param {string[]} filePaths - Array of file paths
    * @returns {Promise} - API response
    */
-  uploadDocuments: (filePaths) => {
+  uploadDocuments: (filePaths: string[]) => {
     return API.post('/upload/patient_documents', {
       file_paths: filePaths
     });
@@ -19,7 +19,7 @@ export const PatientDocumentsApi = {
    * @param {string} fileName - Name of the file to delete
    * @returns {Promise} - API response
    */
-  deleteFile: (fileName) => {
+  deleteFile: (fileName: string) => {
     return API.delete(`/delete/patient_file/${fileName}`);
   },
   
