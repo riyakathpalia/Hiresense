@@ -37,7 +37,7 @@ const MetProAiWorkspacePage = () => {
 
   return (
     <>
-      <Container maxWidth="xl" sx={{ py: 4 }}>
+      <Container maxWidth="xl" sx={{ py: 4 }} disableGutters>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           {/* Workspace Header */}
           <Box sx={{
@@ -49,18 +49,6 @@ const MetProAiWorkspacePage = () => {
               <Typography variant="h4" component="h1" fontWeight="bold">
                 MetProAi Workspaces
               </Typography>
-              {/* <WorkspaceSelector /> */}
-            </Box>
-
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              {/* <CustomButton variant="outline" size="small">
-                <UsersIcon fontSize="small" />
-                Share
-              </CustomButton> */}
-              {/* <CustomButton variant="primary" size="small">
-                <PlusIcon fontSize="small" />
-                New Workspace
-              </CustomButton> */}
             </Box>
           </Box>
 
@@ -85,7 +73,7 @@ const MetProAiWorkspacePage = () => {
           <Divider />
 
           {/* Workspace Content */}
-          <Grid container spacing={4} sx={{ height: 'calc(100vh - 12rem)' }}>
+          <Grid container spacing={1} sx={{ height: 'calc(100vh - 12rem)' }}>
             {activeView === 'files' ? (
               <Grid item xs={12}>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -108,7 +96,7 @@ const MetProAiWorkspacePage = () => {
                 </Box>
               </Grid>
             ) : (
-              <Grid item xs={12}>
+              <Grid item xs={12} sx={{ height: '100%' }}>
                 <WorkspaceChat aiResponse={aiResponse}/>
               </Grid>
             )}

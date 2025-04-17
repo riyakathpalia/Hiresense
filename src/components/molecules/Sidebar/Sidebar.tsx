@@ -210,7 +210,7 @@ const Sidebar = () => {
                   }}
                   onClick={() => {
                     setActiveWorkspace(workspace);
-                    router.push('/workspace');
+                    router.push('/dashboard/workspace');
                   }}
                 >
                   <Box sx={{
@@ -263,7 +263,7 @@ const Sidebar = () => {
                 justifyContent: 'center',
                 minWidth: 'auto'
               }}
-              onClick={() => router.push('/workspace')}
+              onClick={() => router.push('/dashboard/workspace')}
             >
               <Folder sx={{ fontSize: 25 }} />
             </CustomButton>

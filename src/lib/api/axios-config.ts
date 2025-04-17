@@ -3,7 +3,7 @@ import axios from 'axios';
 
 // Create axios instance with default config
 const API = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://127.0.0.1:8080/v3',
+  baseURL: process.env.REACT_APP_API_URL || 'http://43.205.240.35:8501/v1/',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -32,6 +32,10 @@ API.interceptors.response.use(
   },
   (error) => {
     // Handle different error scenarios
+
+    // Add log to see the original error structure
+    console.error('Raw Axios Error:', error); 
+
     const customError = {
       message: error.response?.data?.error || error.response?.data?.message || 'An unexpected error occurred',
       status: error.response?.status || 500,
@@ -53,7 +57,7 @@ API.interceptors.response.use(
         // Handle not found
         break;
       default:
-        // Handle other errors
+        console.log('');
         break;
     }
     

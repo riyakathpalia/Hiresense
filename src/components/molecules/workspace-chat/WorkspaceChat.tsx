@@ -40,7 +40,16 @@ interface ChatHistory {
 }
 
 // Helper function to create a unique ID
-const createId = () => Date.now().toString();
+const createId = () => {
+  // Check if crypto.randomUUID is available (requires secure context or newer envs)
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  // Fallback for environments where crypto.randomUUID is not available
+  // Combines timestamp and random number for reasonable uniqueness
+  console.warn('crypto.randomUUID not available, using fallback ID generation.');
+  return Date.now().toString(36) + Math.random().toString(36).substring(2);
+};
 
 interface WorkspaceChatProps {
   aiResponse?: string | null; // Accept AI response as a prop
@@ -105,9 +114,8 @@ const WorkspaceChat: React.FC<WorkspaceChatProps> = ({ aiResponse }) => {
   // Send message to API
   const sendChatMessage = async (message: string, isJdSearch: boolean = false) => {
     try {
-      // Using our ChatApi from the centralized API service
       const response = await ChatApi.sendMessage(message);
-      return response;
+      return response; 
     } catch (error) {
       console.error('Error sending message:', error);
       throw error;
@@ -134,14 +142,18 @@ const WorkspaceChat: React.FC<WorkspaceChatProps> = ({ aiResponse }) => {
     setIsLoading(true);
 
     try {
-      // Make API call to send chat message using our API service
+      // Make API call - response type is now ChatApiResponse
       const jdSearch = activeWorkspace?.type === 'jd' || false;
       const response = await sendChatMessage(userMessage.ChatResponse, jdSearch);
       
+      // Extract potential reply, could be string, null, undefined, or even an object
+      const aiReply = (response as unknown as { response?: unknown })?.response;
+
       // Create AI response object
       const aiResponse: MessageType = {
         id: createId(),
-        ChatResponse: response.data?.reply || "No response available",
+        // Ensure ChatResponse is always a string, using fallback if aiReply isn't a string
+        ChatResponse: typeof aiReply === 'string' && aiReply.length > 0 ? aiReply : "No response available", 
         isUser: false,
         timestamp: new Date(),
       };
@@ -267,7 +279,7 @@ const WorkspaceChat: React.FC<WorkspaceChatProps> = ({ aiResponse }) => {
     setMessages([
       {
         id: createId(),
-        ChatResponse: `Hello! I'm your CV assistant for the "${activeWorkspace?.name || 'Current'}" workspace. How can I help you today?`,
+        ChatResponse: `Hello! I'm your Medical Assistant for the "${activeWorkspace?.name || 'Current'}" workspace. How can I help you today?`,
         isUser: false,
         timestamp: new Date(),
       },
@@ -401,244 +413,288 @@ const WorkspaceChat: React.FC<WorkspaceChatProps> = ({ aiResponse }) => {
   };
 
   return (
-    <Box sx={{
-      display: 'flex',
-      gap: 2,
-      height: '100%',
-      border: 1,
-      borderRadius: 2,
-      borderColor: 'divider',
-    }}>
-      {/* Chat History Sidebar */}
-      {showHistory && (
-        <Card sx={{ width: '25%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-          <CardContent sx={{ p: 2, flex: 1, overflow: 'hidden' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-              <Typography variant="subtitle1">Recent Conversations</Typography>
-              <IconButton onClick={() => setShowHistory(false)} size="small">
-                <Close fontSize="small" />
-              </IconButton>
+    <>
+      <Box sx={{
+        display: 'flex',
+        gap: 2,
+        height: '100%',
+        border: 1,
+        borderRadius: 2,
+        borderColor: 'divider',
+      }}>
+        {/* Chat History Sidebar */}
+        {showHistory && (
+          <Card sx={{ width: '25%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <CardContent sx={{ p: 2, flex: 1, overflow: 'hidden' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                <Typography variant="subtitle1">Recent Conversations</Typography>
+                <IconButton onClick={() => setShowHistory(false)} size="small">
+                  <Close fontSize="small" />
+                </IconButton>
+              </Box>
+              <Box sx={{ height: 'calc(100vh - 14rem)', overflow: 'auto' }}>
+                <List>
+                  {chatHistories.map((chat) => (
+                    <ListItem
+                      key={chat.id}
+                      component="button"
+                      onClick={() => loadChatHistory(chat.id)}
+                      sx={{
+                        mb: 1,
+                        borderRadius: 1,
+                        backgroundColor: activeChatId === chat.id ? 'action.selected' : 'inherit',
+                        '&:hover': {
+                          backgroundColor: 'action.hover'
+                        }
+                      }}
+                    >
+                      <ListItemText
+                        primary={chat.title}
+                        secondary={
+                          <>
+                            <Typography variant="body2" color="text.secondary" noWrap>
+                              {chat.preview}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {chat.timestamp.toLocaleDateString([], {
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </Typography>
+                          </>
+                        }
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              </Box>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Main Chat Area */}
+        <Card sx={{
+          width: showHistory ? '75%' : '100%',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%'
+        }}>
+          <Box sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            p: 2,
+            borderBottom: 1,
+            borderColor: 'divider'
+          }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Message color="primary" sx={{ color: "white" }} />
+              <Typography variant="subtitle1">
+                {activeChatId
+                  ? chatHistories.find(c => c.id === activeChatId)?.title || 'Chat'
+                  : 'New Conversation'}
+              </Typography>
             </Box>
-            <Box sx={{ height: 'calc(100vh - 14rem)', overflow: 'auto' }}>
-              <List>
-                {chatHistories.map((chat) => (
-                  <ListItem
-                    key={chat.id}
-                    component="button"
-                    onClick={() => loadChatHistory(chat.id)}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Button
+                variant="text"
+                size="small"
+                onClick={() => setShowHistory(!showHistory)}
+                sx={{ color: "white" }}
+                startIcon={<History fontSize="small" sx={{ color: "white" }} />}
+              >
+                {showHistory ? 'Hide History' : 'History'}
+              </Button>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={startNewChat}
+                sx={{ color: "white" }}
+                startIcon={<Message fontSize="small" sx={{ color: "white" }} />}
+              >
+                New Chat
+              </Button>
+            </Box>
+          </Box>
+
+          <Box
+            ref={scrollAreaRef}
+            sx={{
+              flex: 1,
+              overflowY: 'auto',
+              p: 3,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 0.5,
+            }}
+          >
+            {messages.map((message, index) => {
+              const prevMessage = messages[index - 1];
+              const isSameSenderAsPrev = prevMessage ? prevMessage.isUser === message.isUser : false;
+              
+              return (
+                <Box
+                  key={message.id}
+                  sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: message.isUser ? 'flex-end' : 'flex-start',
+                    mt: isSameSenderAsPrev ? 0 : 1.5,
+                  }}
+                >
+                  <Paper
+                    elevation={0}
                     sx={{
-                      mb: 1,
-                      borderRadius: 1,
-                      backgroundColor: activeChatId === chat.id ? 'action.selected' : 'inherit',
-                      '&:hover': {
-                        backgroundColor: 'action.hover'
-                      }
+                      p: 1.5,
+                      maxWidth: '80%',
+                      borderRadius: message.isUser 
+                        ? '16px 4px 16px 16px'
+                        : '4px 16px 16px 16px',
+                      backgroundColor: message.isUser
+                        ? theme.palette.primary.main
+                        : theme.palette.secondary.main,
+                      color: theme.palette.getContrastText(
+                        message.isUser ? theme.palette.primary.main : theme.palette.secondary.main
+                      ),
                     }}
                   >
-                    <ListItemText
-                      primary={chat.title}
-                      secondary={
-                        <>
-                          <Typography variant="body2" color="text.secondary" noWrap>
-                            {chat.preview}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {chat.timestamp.toLocaleDateString([], {
-                              month: 'short',
-                              day: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
-                          </Typography>
-                        </>
-                      }
-                    />
-                  </ListItem>
-                ))}
-              </List>
-            </Box>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Main Chat Area */}
-      <Card sx={{
-        width: showHistory ? '75%' : '100%',
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column'
-      }}>
-        <Box sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          p: 2,
-          borderBottom: 1,
-          borderColor: 'divider'
-        }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Message color="primary" sx={{ color: "white" }} />
-            <Typography variant="subtitle1">
-              {activeChatId
-                ? chatHistories.find(c => c.id === activeChatId)?.title || 'Chat'
-                : 'New Conversation'}
-            </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Button
-              variant="text"
-              size="small"
-              onClick={() => setShowHistory(!showHistory)}
-              sx={{ color: "white" }}
-              startIcon={<History fontSize="small" sx={{ color: "white" }} />}
-            >
-              {showHistory ? 'Hide History' : 'History'}
-            </Button>
-            <Button
-              variant="outlined"
-              size="small"
-              onClick={startNewChat}
-              sx={{ color: "white" }}
-              startIcon={<Message fontSize="small" sx={{ color: "white" }} />}
-            >
-              New Chat
-            </Button>
-          </Box>
-        </Box>
-
-        <Box
-          ref={scrollAreaRef}
-          sx={{
-            flex: 1,
-            overflowY: 'auto',
-            p: 3,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 2,
-          }}
-        >
-          {messages.map((message) => (
-            <Box
-              key={message.id}
-              sx={{
-                display: 'flex',
-                justifyContent: message.isUser ? 'flex-end' : 'flex-start',
-              }}
-            >
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 2,
-                  maxWidth: '80%',
-                  borderRadius: 2,
-                  backgroundColor: message.isUser
-                    ? theme.palette.primary.main
-                    : theme.palette.secondary.main,
-                  color: theme.palette.getContrastText(
-                    message.isUser ? theme.palette.primary.main : theme.palette.secondary.main
-                  ),
-                }}
-              >
-                <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
-                  {message.ChatResponse}
-                </Typography>
-                <Typography variant="caption" sx={{ opacity: 0.7, mt: 0.5, display: 'block' }}>
-                  {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </Typography>
-              </Paper>
-            </Box>
-          ))}
-          {isLoading && (
-            <Box sx={{ display: 'flex', justifyContent: 'flex-start' }}>
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 2,
-                  maxWidth: '80%',
-                  borderRadius: 2,
-                  backgroundColor: theme.palette.secondary.main,
-                  color: theme.palette.getContrastText(theme.palette.secondary.main),
-                }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <CircularProgress size={16} color="inherit" />
-                  <Typography>Processing...</Typography>
+                    <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
+                      {message.ChatResponse}
+                    </Typography>
+                  </Paper>
+                  <Typography 
+                    variant="caption" 
+                    sx={{
+                      px: 1,
+                      mt: 0.25,
+                      opacity: 0.7,
+                      display: 'block' 
+                    }}>
+                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </Typography>
                 </Box>
-              </Paper>
-            </Box>
-          )}
-        </Box>
-
-        {/* Quick Actions */}
-        {activeWorkspace && (
-          <Box sx={{ p: 1, display: 'flex', justifyContent: 'center', gap: 1, borderTop: 1, borderColor: 'divider' }}>
-            {activeWorkspace.type === 'resume' && (
-              <>
-                <Button
-                  size="small"
-                  variant="text"
-                  onClick={() => handleQuickAction('summarize')}
+              );
+            })}
+            {isLoading && (
+              <Box sx={{ display: 'flex', justifyContent: 'flex-start', mt: 1.5 }}>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 1.5,
+                    maxWidth: '80%',
+                    borderRadius: '4px 16px 16px 16px',
+                    backgroundColor: theme.palette.secondary.main,
+                    color: theme.palette.getContrastText(theme.palette.secondary.main),
+                  }}
                 >
-                  Summarize Resume
-                </Button>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <Box component="span" sx={{ animation: 'blink 1.4s infinite both', animationDelay: '0s', fontSize: '1.2em' }}>.</Box>
+                    <Box component="span" sx={{ animation: 'blink 1.4s infinite both', animationDelay: '0.2s', fontSize: '1.2em' }}>.</Box>
+                    <Box component="span" sx={{ animation: 'blink 1.4s infinite both', animationDelay: '0.4s', fontSize: '1.2em' }}>.</Box>
+                  </Box>
+                </Paper>
+              </Box>
+            )}
+          </Box>
+
+          {activeWorkspace && (
+            <Box sx={{ 
+              p: 1, 
+              display: 'flex', 
+              justifyContent: 'center', 
+              gap: 1, 
+              borderTop: 1, 
+              borderColor: 'divider' 
+              }}>
+              {activeWorkspace.type === 'resume' && (
+                <>
+                  <Button
+                    size="small"
+                    variant="text"
+                    onClick={() => handleQuickAction('summarize')}
+                    sx={{ fontSize: '0.75rem' }}
+                  >
+                    Summarize Resume
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="text"
+                    onClick={() => handleQuickAction('match')}
+                    sx={{ fontSize: '0.75rem' }}
+                  >
+                    Find Job Matches
+                  </Button>
+                </>
+              )}
+              {activeWorkspace.type === 'jd' && (
                 <Button
                   size="small"
                   variant="text"
                   onClick={() => handleQuickAction('match')}
+                  sx={{ fontSize: '0.75rem' }}
                 >
-                  Find Job Matches
+                  Find Candidate Matches
                 </Button>
-              </>
-            )}
-            {activeWorkspace.type === 'jd' && (
-              <Button
-                size="small"
-                variant="text"
-                onClick={() => handleQuickAction('match')}
-              >
-                Find Candidate Matches
-              </Button>
-            )}
+              )}
+            </Box>
+          )}
+
+          <Divider /> 
+          <Box
+            component="form"
+            onSubmit={handleSendMessage}
+            sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box sx={{ width: '20%', alignSelf: 'stretch' }}>
+              <WorkspaceSelector />
+            </Box>
+            <TextField
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Type your message here..."
+              multiline
+              minRows={1}
+              maxRows={4}
+              fullWidth
+              variant="outlined"
+              sx={{ 
+                '& .MuiOutlinedInput-root': { 
+                  borderRadius: '12px' 
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage(e);
+                }
+              }}
+            />
+            <CustomButton
+              type="submit"
+              variant="primary"
+              disabled={isLoading || !input.trim()}
+              sx={{ 
+                height: 'auto', 
+                minWidth: '48px', 
+                p: 1.5, 
+                alignSelf: 'stretch' 
+              }}
+            >
+              <Send />
+            </CustomButton>
           </Box>
-        )}
-
-        <Divider />
-
-        <Box
-          component="form"
-          onSubmit={handleSendMessage}
-          sx={{ p: 2, display: 'flex', gap: 2 }}>
-          <Box sx={{ width: '20%' }}>
-            <WorkspaceSelector />
-          </Box>
-
-          <TextField
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Type your message here..."
-            multiline
-            minRows={2}
-            maxRows={4}
-            fullWidth
-            variant="outlined"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSendMessage(e);
-              }
-            }}
-          />
-          <CustomButton
-            type="submit"
-            variant="primary"
-            disabled={isLoading || !input.trim()}
-            sx={{ height: 'auto', minWidth: '56px' }}
-          >
-            <Send />
-          </CustomButton>
-        </Box>
-      </Card>
-    </Box>
+        </Card>
+      </Box>
+      <style>{`
+        @keyframes blink {
+          0% { opacity: .2; }
+          20% { opacity: 1; }
+          100% { opacity: .2; }
+        }
+      `}</style>
+    </>
   );
 };
 
