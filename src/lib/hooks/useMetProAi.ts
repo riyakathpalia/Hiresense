@@ -1,7 +1,7 @@
-import { useState, useCallback } from 'react';
 import { MetProAiAPI } from '@/lib/api/flask-api'; // Assuming your Flask API service
-import { MetProAiNextAPI } from '../api/next-api';
 import axios from 'axios';
+import { useCallback, useState } from 'react';
+import { MetProAiNextAPI } from '../api/next-api';
 
 export const useMetProAi = () => {
     const [medicalDocumentsData, setMedicalDocumentsData] = useState<any[]>([]);
@@ -47,6 +47,7 @@ export const useMetProAi = () => {
 
                 // 2.  Prepare file paths for the Flask API (adjust as needed based on your Next.js API response)
                 const filePaths = nextApiResponse.files.map((file: any) => file.savedAs);
+                console.log("File paths : (upload Medical  Doc Hook) ", filePaths)
 
                 // 3.  Call Flask API to process the uploaded files.  Adapt this to match your Flask API.
                 //    The OpenAPI spec defines this endpoint to receive an array of file *paths*, not File objects.
@@ -54,9 +55,8 @@ export const useMetProAi = () => {
                     file_paths: filePaths,
                 });
                 console.log("Flask API response", flaskResponse)
-                setMedicalDocumentsData(prev => [...prev, ...flaskResponse.saved_files]) //update the list.
 
-                return nextApiResponse; // Or return relevant data from flaskResponse if needed
+                return flaskResponse; // Or return relevant data from flaskResponse if needed
             } catch (err: unknown) {
                 if (axios.isAxiosError(err)) {
                     setMedicalDocumentsError(err.response?.data?.error || 'Failed to upload medical documents');
@@ -77,7 +77,7 @@ export const useMetProAi = () => {
         setMedicalDocumentsError(null);
         try {
             const response = await MetProAiAPI.deleteMedicalFile(fileName); // Corrected to deleteMedicalFile
-             // Remove the deleted item from the state
+            // Remove the deleted item from the state
             setMedicalDocumentsData(prev => prev.filter(item => item.name !== fileName));
             return response;
         } catch (err: unknown) {
@@ -133,7 +133,7 @@ export const useMetProAi = () => {
     }, []);
 
     // Corrected uploadPatientDocuments
-      const uploadPatientDocuments = useCallback(
+    const uploadPatientDocuments = useCallback(
         async (files: File[], workspaceName: string) => {
             setPatientDocumentsLoading(true);
             setPatientDocumentsError(null);
@@ -146,13 +146,14 @@ export const useMetProAi = () => {
 
                 // 2. Prepare file paths
                 const filePaths = nextApiResponse.files.map((file: any) => file.savedAs);
+                console.log("File paths : (upload Patient  Doc Hook) ", filePaths)
 
                 // 3. Call Flask API, passing file paths
                 const flaskResponse = await MetProAiAPI.uploadPatientDocuments({
                     file_paths: filePaths,
                 });
                 console.log('Patient documents uploaded (Flask API):', flaskResponse);
-                setPatientDocumentsData(prev => [...prev, ...flaskResponse.saved_files]);
+        
 
                 return nextApiResponse; // Or return data from Flask if needed.
             } catch (err: unknown) {
@@ -175,7 +176,7 @@ export const useMetProAi = () => {
         setPatientDocumentsError(null);
         try {
             const response = await MetProAiAPI.deletePatientFile(fileName);  // Corrected to deletePatientFile
-             setPatientDocumentsData(prev => prev.filter(item => item.name !== fileName));
+            setPatientDocumentsData(prev => prev.filter(item => item.name !== fileName));
             return response;
         } catch (err: unknown) {
             if (axios.isAxiosError(err)) {
@@ -211,25 +212,14 @@ export const useMetProAi = () => {
     // ... other hooks for chat, workspace, system ...
 
     return {
-        medicalDocuments: {
-            data: medicalDocumentsData,
-            loading: medicalDocumentsLoading,
-            error: medicalDocumentsError,
-            fetch: fetchMedicalDocuments,
-            upload: uploadMedicalDocuments,
-            delete: deleteMedicalDocument,
-            extractPdf: extractMedicalPdf,
-        },
-        patientDocuments: {
-            data: patientDocumentsData,
-            loading: patientDocumentsLoading,
-            error: patientDocumentsError,
-            fetch: fetchPatientDocuments,
-            upload: uploadPatientDocuments,
-            delete: deletePatientDocument,
-            extractPdf: extractPatientPdf,
-        },
-        // ... return other hooks ...
+        medicalDocumentsData,
+        medicalDocumentsLoading,
+        medicalDocumentsError,
+        fetchMedicalDocuments,
+        uploadMedicalDocuments,
+        deleteMedicalDocument,
+        extractMedicalPdf,
+        uploadPatientDocuments,
     };
 };
 

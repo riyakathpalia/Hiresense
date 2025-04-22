@@ -1,21 +1,35 @@
-// src/utils/apiErrorHandling.ts
+import { ApiResponse } from '@/lib/api/axios-config';
 import axios, { AxiosError } from 'axios';
 
+// Error handling helper function
 export const handleApiError = (error: unknown, defaultMessage: string = 'API Error') => {
+  // If it's an axios error, extract useful information
   if (axios.isAxiosError(error)) {
-    const axiosError = error as AxiosError<any>;
-    
+    const axiosError = error as AxiosError<ApiResponse>;
+
     if (axiosError.response?.data) {
-      // Server responded with an error
-      return new Error(
-        `${defaultMessage}: ${axiosError.response.data.error || axiosError.response.data.message || axiosError.message}`
-      );
-    } else if (axiosError.request) {
-      // Request was made but no response received
-      return new Error(`${defaultMessage} (No response received)`);
+      // If the API returned an error message, use that
+      return {
+        ...axiosError.response.data,
+        status: axiosError.response.status,
+        message: axiosError.response.data.error || axiosError.response.data.message || defaultMessage,
+      };
+    }
+
+    if (axiosError.request) {
+      // The request was made but no response was received
+      return {
+        status: 0,
+        message: 'Network error: No response received',
+        error: 'NETWORK_ERROR',
+      };
     }
   }
-  
-  // For non-Axios errors or other cases
-  return new Error(`${defaultMessage}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+
+  // For any other type of error
+  return {
+    status: 500,
+    message: defaultMessage,
+    error: (error as Error)?.message || 'UNKNOWN_ERROR',
+  };
 };

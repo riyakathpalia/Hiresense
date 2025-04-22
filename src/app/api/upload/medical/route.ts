@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Create workspace directory under 'medical' folder
-    const WORKSPACE_DIR = path.join(UPLOAD_DIR, workspaceName);
+    const WORKSPACE_DIR = path.join(UPLOAD_DIR, workspaceName, 'medical');
     if (!existsSync(WORKSPACE_DIR)) {
       await mkdir(WORKSPACE_DIR, { recursive: true });
     }

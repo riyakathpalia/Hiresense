@@ -1,11 +1,9 @@
 "use client";
-import { Box, Container, Grid, Typography, useTheme } from "@mui/material";
-import { FileText, Search, Users, BarChart4 } from "lucide-react";
-import WorkspaceUpload from "@/components/molecules/workspace-upload/WorkspaceUpload";
 import WorkspaceChat from "@/components/molecules/workspace-chat/WorkspaceChat";
-import WorkspaceSelector from "@/components/molecules/Workspace-Selector/WorkspaceSelector";
-import { useEffect } from "react";
+import WorkspaceUpload from "@/components/molecules/workspace-upload/WorkspaceUpload";
 import { ensureGuestId } from "@/utils/userAgent";
+import { Box, Container, Typography, useTheme } from "@mui/material";
+import { useEffect } from "react";
 
 const MetProAiHomePage = () => {
   const theme = useTheme();
@@ -31,7 +29,11 @@ const MetProAiHomePage = () => {
 
   return (
     <>
-      <Container maxWidth="xl" sx={{ py: 4 }}>
+      <Container
+        sx={{
+          py: 4,
+        }}
+      >
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           {/* Workspace Header */}
           <Box
@@ -56,27 +58,17 @@ const MetProAiHomePage = () => {
             }}
           >
             <Box sx={{
-              display: 'flex',
-              flexWrap: 'wrap', // Allow uploads to wrap on smaller screens
-            }}>
+                display: 'flex',
+                gap: 2, // Add some gap
+                width: '100%'
+              }}>
               <WorkspaceUpload
                 type="medicalDocument"
-                uploadHandler={handleMedicalUpload}
-                uploadUrlHandler={async (url: string, workspaceName: string) => {
-                  console.log("Uploading medical document via URL for MetProAi:", url, workspaceName);
-                  return { success: true, message: "Medical document uploaded via URL to MetProAi" };
-                }}
-                onUploadSuccess={handleUploadSuccess}
-              />
+                />
+                
+              
               <WorkspaceUpload
-                type="patientDocument"
-                uploadHandler={handlePatientUpload}
-                uploadUrlHandler={async (url: string, workspaceName: string) => {
-                  console.log("Uploading patient document via URL for MetProAi:", url, workspaceName);
-                  return { success: true, message: "Patient document uploaded via URL to MetProAi" };
-                }}
-                onUploadSuccess={handleUploadSuccess}
-              />
+                type="patientDocument"/>
             </Box>
 
             <Box>

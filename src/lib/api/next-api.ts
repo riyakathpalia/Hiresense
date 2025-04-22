@@ -3,6 +3,10 @@ import { handleApiError } from '@/utils/apiErrorHandling';
 import { Workspace } from '@/context/WorkspaceContext';
 
 interface UploadFile {
+    url: any;
+    type: any;
+    size: any;
+    originalname: any;
     savedAs: string;
 }
 

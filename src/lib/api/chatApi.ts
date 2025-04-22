@@ -3,7 +3,7 @@ import axios from 'axios';
 
 // Create an instance of axios if needed
 const API = axios.create({
-  baseURL: 'https://your-api-base-url.com', // Replace with your API base URL
+  baseURL: process.env.NEXT_PUBLIC_API_URL, // Replace with your API base URL
 });
 
 // Extended Chat API with workspace-specific methods

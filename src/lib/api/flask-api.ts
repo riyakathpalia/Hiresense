@@ -1,4 +1,5 @@
 import axios, { AxiosError, AxiosResponse } from 'axios';
+import { handleApiError } from '@/utils/apiErrorHandling';
 
 // Define types for MetProAi API responses (adjust based on your Flask API)
 interface ApiResponse {
@@ -35,25 +36,25 @@ const metProAiApi = axios.create({
 });
 
 // error handling function (adjust as needed for MetProAi - check Flask error responses)
-const handleApiError = (error: unknown, message: string): Error => {
-    if (axios.isAxiosError(error)) {
-        // detailed error handling
-        let errorMessage = message;
-        if (error.response) {
-            errorMessage += ` (Status: ${error.response.status}, Data: ${JSON.stringify(error.response.data)})`;
-        } else if (error.request) {
-            errorMessage += ' (No response received)';
-        } else {
-            errorMessage += ` (Error setting up request: ${error.message})`;
-        }
-        console.error(errorMessage);
-        return new Error(errorMessage);
-    } else {
-        // for non-Axios errors
-        console.error(message, error);
-        return new Error(message);
-    }
-};
+// const handleApiError = (error: unknown, message: string): Error => {
+//     if (axios.isAxiosError(error)) {
+//         // detailed error handling
+//         let errorMessage = message;
+//         if (error.response) {
+//             errorMessage += ` (Status: ${error.response.status}, Data: ${JSON.stringify(error.response.data)})`;
+//         } else if (error.request) {
+//             errorMessage += ' (No response received)';
+//         } else {
+//             errorMessage += ` (Error setting up request: ${error.message})`;
+//         }
+//         console.error(errorMessage);
+//         return new Error(errorMessage);
+//     } else {
+//         // for non-Axios errors
+//         console.error(message, error);
+//         return new Error(message);
+//     }
+// };
 
 // API Service for MetProAi
 export const MetProAiAPI = {
@@ -79,7 +80,7 @@ export const MetProAiAPI = {
         }
     },
 
-    // List Medical Documents  -  Requires implementation in Flask and OpenAPI
+    // List Medical Documents    -  Requires implementation in Flask and OpenAPI
     listMedicalDocuments: async (): Promise<ListDocumentsResponse> => {
         try {
             const response: AxiosResponse<ListDocumentsResponse> = await metProAiApi.get('/list/medical_documents'); // endpoint.  You might need to create this.
@@ -110,7 +111,7 @@ export const MetProAiAPI = {
     },
 
     // Delete Patient Document
-    deletePatientFile: async (fileName: string): Promise<ApiResponse> => {  // Changed parameter name to fileName
+    deletePatientFile: async (fileName: string): Promise<ApiResponse> => {    // Changed parameter name to fileName
         try {
             const response: AxiosResponse<ApiResponse> = await metProAiApi.delete(`/delete/patient_file/${fileName}`); // endpoint
             return response.data;
@@ -141,7 +142,7 @@ export const MetProAiAPI = {
     // Chat with Medical Data
     sendMedicalChatMessage: async (message: string): Promise<ChatResponse> => {
         try {
-            const response: AxiosResponse<ChatResponse> = await metProAiApi.post('/chat', { message }); // endpoint
+            const response: AxiosResponse<ChatResponse> = await metProAiApi.post('/chat/medical', { message }); // endpoint
             return response.data;
         } catch (error) {
             throw handleApiError(error, 'Error sending medical chat message');
@@ -151,7 +152,7 @@ export const MetProAiAPI = {
     // Chat with Patient Data
     sendPatientChatMessage: async (message: string): Promise<ChatResponse> => {
         try {
-            const response: AxiosResponse<ChatResponse> = await metProAiApi.post('/chat', { message }); // endpoint
+            const response: AxiosResponse<ChatResponse> = await metProAiApi.post('/chat/patient', { message }); // endpoint
             return response.data;
         } catch (error) {
             throw handleApiError(error, 'Error sending patient chat message');
@@ -167,3 +168,4 @@ export const MetProAiAPI = {
         }
     },
 };
+

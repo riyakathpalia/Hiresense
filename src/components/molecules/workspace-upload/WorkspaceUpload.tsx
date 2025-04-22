@@ -1,36 +1,53 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useWorkspace } from '@/context/WorkspaceContext';
+import useMetProAi from '@/lib/hooks/useMetProAi';
 import {
-    Upload as UploadIcon,
-    X,
-    FileText,
-    Link
-} from 'lucide-react';
-import {
+    Box,
+    Button,
     Card,
     CardContent,
     CardHeader,
-    Typography,
-    Box,
+    IconButton,
     List,
     ListItem,
     ListItemIcon,
     ListItemText,
-    IconButton,
     TextField,
+    Typography,
 } from '@mui/material';
+import {
+    FileText,
+    Link as LinkIcon,
+    Upload as UploadIcon,
+    X
+} from 'lucide-react';
 import { useSnackbar } from 'notistack';
-import { CardFooter } from '../Card/Card';
+import React, { useEffect, useState } from 'react';
 import CustomButton from '../../atoms/button/CustomButton';
-import { useWorkspace } from '@/context/WorkspaceContext';
-import useMetProAi from '@/lib/hooks/useMetProAi';
+import { CardFooter } from '../Card/Card';
 
 type UploadType = 'medicalDocument' | 'patientDocument';
 
+// Define the type for the file information we get back from the server
+interface UploadFileResponse {
+    originalname: string;
+    savedAs: string; //  relative path within the uploads directory
+    size: number;
+    type: string;
+    url: string; // Full URL to access the file
+}
+
+// Define the structure of the upload response
+interface UploadResponse {
+    message: string;
+    processedFiles: number;
+    files: UploadFileResponse[];
+}
+
 interface WorkspaceUploadProps {
     type: UploadType;
-    onUploadSuccess?: (response: any) => void;
+    onUploadSuccess?: (response: UploadResponse) => void; // Use the defined type here
 }
 
 const MAX_FILE_SIZE_MB = 10;
@@ -46,7 +63,35 @@ const WorkspaceUpload: React.FC<WorkspaceUploadProps> = ({
     const [url, setUrl] = useState('');
     const [isUploadingUrl, setIsUploadingUrl] = useState(false);
     const [dragActive, setDragActive] = useState(false);
-    const { medicalDocuments, patientDocuments } = useMetProAi();
+    const { uploadMedicalDocuments } = useMetProAi();
+    const { uploadPatientDocuments } = useMetProAi();
+    const [uploadedFiles, setUploadedFiles] = useState<UploadFileResponse[]>([]); // State for uploaded files
+
+
+    // Load uploaded files from localStorage on component mount
+    useEffect(() => {
+        if (activeWorkspace?.name) {
+            const savedFilesKey = `uploadedFiles_${activeWorkspace.name}_${type}`;
+            const savedFiles = localStorage.getItem(savedFilesKey);
+            if (savedFiles) {
+                try {
+                    setUploadedFiles(JSON.parse(savedFiles));
+                } catch (error) {
+                    console.error('Error parsing saved files:', error);
+                    // Handle error, e.g., clear the invalid data
+                    localStorage.removeItem(savedFilesKey);
+                }
+            }
+        }
+    }, [activeWorkspace?.name, type]);
+
+    // Save uploaded files to localStorage whenever they change
+    useEffect(() => {
+        if (activeWorkspace?.name) {
+            const savedFilesKey = `uploadedFiles_${activeWorkspace.name}_${type}`;
+            localStorage.setItem(savedFilesKey, JSON.stringify(uploadedFiles));
+        }
+    }, [uploadedFiles, activeWorkspace?.name, type]);
 
     const isValidFile = (file: File) => {
         const validTypes = [
@@ -94,7 +139,6 @@ const WorkspaceUpload: React.FC<WorkspaceUploadProps> = ({
         setFiles((prev) => prev.filter((_, i) => i !== index));
     };
 
-    // Handle file upload button click
     const handleFileUpload = async () => {
         if (!activeWorkspace?.name) {
             enqueueSnackbar('Please select a workspace first.', { variant: 'warning' });
@@ -110,26 +154,25 @@ const WorkspaceUpload: React.FC<WorkspaceUploadProps> = ({
 
         setUploading(true);
 
+        const medicalDocUploadHandler = type === "medicalDocument" ? uploadMedicalDocuments : uploadPatientDocuments;
+
         try {
-            let response;
-            if (type === 'medicalDocument') {
-                response = await medicalDocuments.upload(files, activeWorkspace.name);
-            } else {
-                response = await patientDocuments.upload(files, activeWorkspace.name);
-            }
+
+            const response = await medicalDocUploadHandler(files, activeWorkspace.name);
+
             console.log(`${type} File Upload response:`, response);
-            onUploadSuccess?.(response);
-            enqueueSnackbar(`${type === 'medicalDocument' ? 'Medical' : 'Patient'} documents uploaded successfully to MetProAi!`, {
-                variant: 'success',
-            });
-            setFiles([]); // Clear files after successful upload
+            setFiles([]); // Clear local file selection
+
         } catch (error: any) {
             console.error('File Upload error:', error);
-            enqueueSnackbar(`Failed to upload ${type === 'medicalDocument' ? 'medical' : 'patient'} documents to MetProAi.  ${error.message || 'An error occurred.'}`, { variant: 'error' });
+            enqueueSnackbar(`Failed to upload ${type === 'medicalDocument' ? 'medical' : 'patient'} documents to MetProAi.  ${error.message || 'An error occurred.'}`, {
+                variant: 'error',
+            });
         } finally {
             setUploading(false);
         }
     };
+
 
     const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setUrl(e.target.value);
@@ -148,18 +191,26 @@ const WorkspaceUpload: React.FC<WorkspaceUploadProps> = ({
 
         setIsUploadingUrl(true);
         try {
-            let response;
-            if (type === 'medicalDocument') {
-                response = await medicalDocuments.extractPdf(url);
-            } else {
-                response = await patientDocuments.extractPdf(url);
-            }
-            console.log(`${type} URL Upload response:`, response);
-            onUploadSuccess?.(response)
-            enqueueSnackbar(`${type === 'medicalDocument' ? 'Medical' : 'Patient'} document from URL uploaded successfully to MetProAi!`, {
-                variant: 'success',
-            });
-            setUrl('');
+            // const apiResponse = await (type === 'medicalDocument'
+            //     ? medicalDocuments.extractPdf(`${url}?workspace=${activeWorkspace.name}`)
+            //     : patientDocuments.extractPdf(`${url}?workspace=${activeWorkspace.name}`));
+
+            //   const response: UploadResponse = {
+            //     message: apiResponse.message || 'File from URL uploaded successfully',
+            //     processedFiles: apiResponse.processedFiles || 0,
+            //     files: apiResponse.files.map((file: any) => ({
+            //         originalname: file.originalname,
+            //         savedAs: file.savedAs,
+            //         size: file.size,
+            //         type: file.type,
+            //         url: file.url,
+            //     })),
+            // };
+
+            // console.log(`${type} URL Upload response:`, response);
+
+
+            // setUrl('');
         } catch (error: any) {
             console.error('URL Upload error:', error);
             enqueueSnackbar(`Failed to upload ${type === 'medicalDocument' ? 'medical' : 'patient'} document from URL to MetProAi. ${error.message || 'An error occurred.'}`, { variant: 'error' });
@@ -278,6 +329,39 @@ const WorkspaceUpload: React.FC<WorkspaceUploadProps> = ({
                     aria-label="Document URL input"
                     sx={{ mb: 2 }}
                 />
+
+                {/* Display Uploaded Files */}
+                {uploadedFiles.length > 0 && (
+                    <Box mt={4}>
+                        <Typography variant="h6" gutterBottom>
+                            Uploaded Files
+                        </Typography>
+                        <List>
+                            {uploadedFiles.map((file, index) => (
+                                <ListItem key={index} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                        <FileText size={16} />
+                                        <ListItemText
+                                            primary={file.originalname}
+                                            secondary={`${(file.size / 1024).toFixed(2)} KB, ${file.type}`}
+                                        />
+                                    </Box>
+                                    <a
+                                        href={file.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{ textDecoration: 'none' }}
+                                    >
+                                        <Button variant="outlined" size="small">
+                                            View <LinkIcon size={16} />
+                                        </Button>
+                                    </a>
+                                </ListItem>
+                            ))}
+                        </List>
+                    </Box>
+                )}
+
             </CardContent>
             <CardFooter>
                 <Box display="flex" justifyContent="space-between" width="100%" gap={1}>
@@ -291,7 +375,7 @@ const WorkspaceUpload: React.FC<WorkspaceUploadProps> = ({
                     </CustomButton>
                     <CustomButton
                         variant="primary"
-                        onClick={handleFileUpload} // Use handleFileUpload here
+                        onClick={handleFileUpload}
                         disabled={files.length === 0 || uploading}
                         startIcon={!uploading && <UploadIcon size={16} />}
                         size="small"
@@ -303,7 +387,7 @@ const WorkspaceUpload: React.FC<WorkspaceUploadProps> = ({
                         color="primary"
                         onClick={handleUrlUpload}
                         disabled={!url.trim() || isUploadingUrl}
-                        startIcon={!isUploadingUrl && <Link size={16} />}
+                        startIcon={!isUploadingUrl && <LinkIcon size={16} />}
                         size="small"
                     >
                         {isUploadingUrl ? `Uploading from URL to MetProAi...` : `Upload from URL`}
@@ -315,3 +399,4 @@ const WorkspaceUpload: React.FC<WorkspaceUploadProps> = ({
 };
 
 export default WorkspaceUpload;
+
