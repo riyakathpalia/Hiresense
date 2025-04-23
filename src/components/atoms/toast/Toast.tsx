@@ -1,5 +1,10 @@
-import React from "react"
-import { ToastProps } from "@/components/ui/toast"
+import React from "react";
+
+export interface ToastProps {
+  title: string; // The title of the toast
+  description?: string; // Optional description for the toast
+  action?: React.ReactNode; // Optional action element (e.g., a button)
+}
 
 const Toast: React.FC<ToastProps> = ({ title, description, action }) => {
   return (

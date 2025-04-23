@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Check, ChevronDown, Plus, Trash2 } from 'lucide-react';
 import {
-  Button,
+  //Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -17,9 +17,15 @@ import {
   Box,
   Avatar,
 } from '@mui/material';
-import { useWorkspace } from '@/context/WorkspaceContext';
+import { useWorkspace, Workspace } from '@/context/WorkspaceContext';
 import { useToast } from '@/lib/hooks/useToast';
 import CustomButton from '@/components/atoms/button/CustomButton';
+
+// type Workspace = {
+//   id: string;
+//   name: string;
+//   // add more fields if needed
+// };
 
 const WorkspaceSelector = () => {
   const { activeWorkspace, setActiveWorkspace, workspaces, addWorkspace, deleteWorkspace } = useWorkspace();
@@ -143,7 +149,7 @@ const WorkspaceSelector = () => {
         transformOrigin={{ horizontal: 'right', vertical: 'top' }}
         anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
       >
-        {workspaces.map((workspace: any) => (
+        {workspaces.map((workspace: Workspace) => (
           <MenuItem 
             key={workspace.id}
             onClick={() => {

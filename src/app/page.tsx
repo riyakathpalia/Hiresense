@@ -1,7 +1,7 @@
 "use client";
 import React from 'react';
 import DashboardLayout from './dashboard/layout'; // Ensure this path is correct
-import { Box, Container, Typography, Card, CardContent, Grid, List, ListItem, ListItemText, Button } from '@mui/material';
+import { Container, Typography, Card, CardContent, Grid, List, ListItem, ListItemText, Button } from '@mui/material';
 
 const HomePageContent = () => {
   return (

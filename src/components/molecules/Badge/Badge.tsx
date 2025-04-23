@@ -2,6 +2,7 @@ import React from "react";
 import { Chip } from "@mui/material";
 import { styled } from "@mui/material/styles";
 
+// StyledChip definition with variants
 const StyledChip = styled(Chip)<{ customVariant: "default" | "secondary" | "destructive" | "outline" }>(
   ({ theme, customVariant }) => {
     const variants = {
@@ -37,17 +38,16 @@ const StyledChip = styled(Chip)<{ customVariant: "default" | "secondary" | "dest
   }
 );
 
+// BadgeProps interface definition
 export interface BadgeProps {
-    variant?: "default" | "secondary" | "destructive" | "outline";
-    className?: string;
-    children?: React.ReactNode;
-    label: string;
-  }
+  variant?: "default" | "secondary" | "destructive" | "outline";
+  className?: string;
+  label: string;
+}
 
-
+// Badge component
 const Badge: React.FC<BadgeProps> = ({ label, variant = "default", className, ...props }) => {
-  const { children, ...restProps } = props;
-  return <StyledChip label={label} customVariant={variant} className={className} {...restProps} />;
+  return <StyledChip label={label} customVariant={variant} className={className} {...props} />;
 };
 
 export { Badge };

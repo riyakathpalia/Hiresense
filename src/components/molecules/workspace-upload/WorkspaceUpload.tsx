@@ -54,7 +54,7 @@ const MAX_FILE_SIZE_MB = 10;
 
 const WorkspaceUpload: React.FC<WorkspaceUploadProps> = ({
     type,
-    onUploadSuccess,
+    // onUploadSuccess,
 }) => {
     const { activeWorkspace } = useWorkspace();
     const { enqueueSnackbar } = useSnackbar();
@@ -63,8 +63,7 @@ const WorkspaceUpload: React.FC<WorkspaceUploadProps> = ({
     const [url, setUrl] = useState('');
     const [isUploadingUrl, setIsUploadingUrl] = useState(false);
     const [dragActive, setDragActive] = useState(false);
-    const { uploadMedicalDocuments } = useMetProAi();
-    const { uploadPatientDocuments } = useMetProAi();
+    const { uploadMedicalDocuments, uploadPatientDocuments } = useMetProAi();
     const [uploadedFiles, setUploadedFiles] = useState<UploadFileResponse[]>([]); // State for uploaded files
 
 
@@ -163,14 +162,20 @@ const WorkspaceUpload: React.FC<WorkspaceUploadProps> = ({
             console.log(`${type} File Upload response:`, response);
             setFiles([]); // Clear local file selection
 
-        } catch (error: any) {
+        } catch (error: unknown) {
+            let message = 'An error occurred.';
+            if (error instanceof Error) {
+                message = error.message;
+            }
+        
             console.error('File Upload error:', error);
-            enqueueSnackbar(`Failed to upload ${type === 'medicalDocument' ? 'medical' : 'patient'} documents to MetProAi.  ${error.message || 'An error occurred.'}`, {
+            enqueueSnackbar(`Failed to upload ${type === 'medicalDocument' ? 'medical' : 'patient'} documents to MetProAi. ${message}`, {
                 variant: 'error',
             });
         } finally {
             setUploading(false);
         }
+        
     };
 
 
@@ -211,12 +216,19 @@ const WorkspaceUpload: React.FC<WorkspaceUploadProps> = ({
 
 
             // setUrl('');
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('URL Upload error:', error);
-            enqueueSnackbar(`Failed to upload ${type === 'medicalDocument' ? 'medical' : 'patient'} document from URL to MetProAi. ${error.message || 'An error occurred.'}`, { variant: 'error' });
+        
+            const message =
+                error instanceof Error ? error.message : 'An error occurred.';
+        
+            enqueueSnackbar(`Failed to upload ${type === 'medicalDocument' ? 'medical' : 'patient'} document from URL to MetProAi. ${message}`, {
+                variant: 'error',
+            });
         } finally {
             setIsUploadingUrl(false);
         }
+        
     };
 
     const getDragDropText = () => {

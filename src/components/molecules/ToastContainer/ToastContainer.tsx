@@ -1,6 +1,6 @@
 import React from "react"
 import { useToast } from "@/lib/hooks/useToast"
-import Toast from "@/components/atoms/Toast"
+import Toast from "@/components/atoms/toast/Toast"
 
 const ToastContainer = () => {
   const { toasts } = useToast()

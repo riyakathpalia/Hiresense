@@ -1,5 +1,5 @@
 'use client';
-import { InputBase, InputBaseProps, styled, useTheme } from '@mui/material';
+import { InputBase, InputBaseProps, useTheme } from '@mui/material';
 import { CircularProgress } from '@mui/material';
 import React from 'react';
 

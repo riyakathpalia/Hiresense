@@ -1,238 +1,556 @@
-import React, { useState } from 'react';
-import { Folder, FileText, ChevronRight, ChevronDown, MoreHorizontal, Plus, Trash, Upload } from 'lucide-react';
-import { ScrollArea } from '@/components/atoms/scroll-area/ScrollArea';
 import CustomButton from '@/components/atoms/button/CustomButton';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/molecules/Card/Card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/molecules/tabs/Tabs';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/atoms/dropdown-menu/Dropdown';
 import { useWorkspace } from '@/context/WorkspaceContext';
-import { Box } from '@mui/system';
-import WorkspaceUpload from '../workspace-upload/WorkspaceUpload';
+import { ChatApi } from '@/lib/api/chatApi';
+import { Close, History, Message, Send } from '@mui/icons-material';
+import {
+    Box,
+    Button,
+    Card,
+    CardContent,
+    CircularProgress,
+    //Divider,
+    IconButton,
+    List,
+    ListItem,
+    ListItemText,
+    Paper,
+    TextField,
+    Typography,
+    useTheme
+} from '@mui/material';
+import { useSnackbar } from 'notistack';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+//import WorkspaceSelector from '../Workspace-Selector/WorkspaceSelector';
 
-const FolderItem = ({ item, depth = 0, onDelete }: { item: any; depth?: number; onDelete?: (item: any) => void }) => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  const handleDelete = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onDelete) {
-      onDelete(item);
-    }
-  };
-
-  return (
-    <Box sx={{ userSelect: 'none' }}>
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          py: 1.5,
-          px: 2,
-          borderRadius: '4px',
-          '&:hover': { backgroundColor: 'background.paper' },
-          cursor: 'pointer',
-          fontSize: '0.875rem',
-          pl: depth * 2 + 1
-        }}
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        <CustomButton variant="ghost" size="small" sx={{ height: 16, width: 16, mr: 1, p: 0 }}>
-          {isOpen ? <ChevronDown style={{ height: 16, width: 16 }} /> : <ChevronRight style={{ height: 16, width: 16 }} />}
-        </CustomButton>
-        <Folder style={{ height: 16, width: 16, marginRight: 8, color: 'var(--mui-palette-primary-main)' }} />
-        <Box sx={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</Box>
-        <DropdownMenu open={false}>
-          <DropdownMenuTrigger asChild onClick={(e: any) => e.stopPropagation()}>
-            <CustomButton
-              variant="primary"
-              size="small"
-              sx={{
-                height: 24,
-                width: 24,
-                opacity: 0,
-                '&:hover': { opacity: 1 },
-                '.group:hover &': { opacity: 1 }
-              }}
-            >
-              <MoreHorizontal style={{ height: 16, width: 16 }} />
-            </CustomButton>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent open={false}>
-            <DropdownMenuItem sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Plus style={{ height: 16, width: 16 }} />
-              Add File
-            </DropdownMenuItem>
-            <DropdownMenuItem sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Upload style={{ height: 16, width: 16 }} />
-              Upload
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={handleDelete}
-              sx={{ display: 'flex', alignItems: 'center', gap: 2, color: 'error.main' }}
-            >
-              <Trash style={{ height: 16, width: 16 }} />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </Box>
-      {isOpen && item.children && item.children.map((child: any, index: number) => (
-        <Box key={index} className="group">
-          {child.type === 'folder' ? (
-            <FolderItem item={child} depth={depth + 1} onDelete={onDelete} />
-          ) : (
-            <FileItem item={child} depth={depth + 1} onDelete={onDelete} />
-          )}
-        </Box>
-      ))}
-    </Box>
-  );
-};
-
-const FileItem = ({ item, depth = 0, onDelete }: { item: any; depth?: number; onDelete?: (item: any) => void }) => {
-  const handleDelete = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onDelete) {
-      onDelete(item);
-    }
-  };
-
-  return (
-    <Box
-      sx={{
-        display: 'flex',
-        alignItems: 'center',
-        py: 1.5,
-        px: 2,
-        borderRadius: '4px',
-        '&:hover': { backgroundColor: 'background.paper' },
-        cursor: 'pointer',
-        pl: depth * 2 + 3.5,
-        fontSize: '0.875rem'
-      }}
-    >
-      <FileText style={{ height: 16, width: 16, marginRight: 8, color: 'var(--mui-palette-text-secondary)' }} />
-      <Box sx={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</Box>
-      <DropdownMenu open={false}>
-        <DropdownMenuTrigger asChild>
-          <CustomButton
-            variant="ghost"
-            size="small"
-            sx={{
-              height: 24,
-              width: 24,
-              opacity: 0,
-              '&:hover': { opacity: 1 },
-              '.group:hover &': { opacity: 1 }
-            }}
-          >
-            <MoreHorizontal style={{ height: 16, width: 16 }} />
-          </CustomButton>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent open={false}>
-          <DropdownMenuItem>View</DropdownMenuItem>
-          <DropdownMenuItem>Rename</DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>Delete</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </Box>
-  );
-};
-
-interface WorkspaceExplorerProps {
-  onDocumentUploadSuccess?: (response: any) => void;
-  onDeleteFile?: (item: any) => void;
-  onDeleteFolder?: (item: any) => void;
+interface MessageType {
+    id: string;
+    ChatResponse: unknown;
+    isUser: boolean;
+    timestamp: Date;
 }
 
-const WorkspaceExplorer: React.FC<WorkspaceExplorerProps> = ({ onDocumentUploadSuccess, onDeleteFile, onDeleteFolder }) => {
-  const [activeTab, setActiveTab] = useState<'documents'>('documents');
-  const { activeWorkspace } = useWorkspace();
+interface ChatHistory {
+    id: string;
+    title: string;
+    preview: string;
+    timestamp: Date;
+    messages: MessageType[];
+}
 
-  const hasDocuments = activeWorkspace?.folders?.some(f => f.type === 'resume' || f.type === 'jd') ?? false;
-
-  const handleFileUploadSuccess = (response: any) => {
-    if (onDocumentUploadSuccess) {
-      onDocumentUploadSuccess(response);
+interface ChatApiResponse {
+    response?: string; // The actual chat response, optional in case of errors
+    // You might have other properties in your API response, add them here
+    [key: string]: unknown; // To allow for other potential properties
+    
+}
+const createId = () => {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        return crypto.randomUUID();
     }
-  };
-
-  const handleDeleteItem = (item: any) => {
-    console.log('Deleting item:', item);
-    if (item.type === 'folder' && onDeleteFolder) {
-      onDeleteFolder(item);
-      // After deleting, you might need to fetch updated workspace data
-      // or update the local state to reflect the deletion.
-    } else if (item.type === 'file' && onDeleteFile) {
-      onDeleteFile(item);
-      // Similarly, update local state or fetch data after deletion.
-    }
-    // If you're managing the workspace data locally in the context,
-    // you might need to call a function from the context to update it.
-    // Example: updateWorkspace(updatedWorkspaceData);
-  };
-
-  return (
-    <Box sx={{
-      border: 1,
-      borderRadius: 2,
-      borderColor: 'divider',
-    }}>
-      <CardHeader>
-        <Box sx={{ py: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <CardTitle>
-              <Box sx={{ fontSize: '1.125rem' }}>File Explorer</Box>
-            </CardTitle>
-            {/* <CustomButton variant="outline" size="small">
-              <Plus style={{ height: 16, width: 16, marginRight: 2 }} />
-              Add Folder
-            </CustomButton> */}
-          </Box>
-        </Box>
-      </CardHeader>
-      <CardContent>
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
-            <TabsTrigger value="documents">Medical Documents</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="documents">
-            <ScrollArea style={{ height: 'calc(100vh - 20rem)' }}>
-              {hasDocuments ? (
-                <Box sx={{ '& > * + *': { mt: 1 } }}>
-                  {activeWorkspace?.folders
-                    .filter(f => f.type === 'resume' || f.type === 'jd')
-                    .map((folder, index) => (
-                      <FolderItem key={index} item={folder} onDelete={handleDeleteItem} />
-                    ))}
-                  {activeWorkspace?.files
-                    .filter(f => f.type === 'medicalDocument')
-                    .map((file: { name: string; type: string }, index) => (
-                      <FileItem key={index} item={file} onDelete={handleDeleteItem} />
-                    ))}
-                </Box>
-              ) : (
-                <WorkspaceUpload 
-                  type='medicalDocument' 
-                  onUploadSuccess={handleFileUploadSuccess} 
-                  uploadHandler={() => { /* Add your upload logic here */ }} 
-                  uploadUrlHandler={() => { /* Add your upload URL logic here */ }} 
-                />
-              )}
-            </ScrollArea>
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Box>
-  );
+    console.warn('crypto.randomUUID not available, using fallback ID generation.');
+    return Date.now().toString(36) + Math.random().toString(36).substring(2);
 };
 
-export default WorkspaceExplorer;
+interface WorkspaceChatProps {
+    aiResponse?: string | null;
+}
+
+const WorkspaceChat: React.FC<WorkspaceChatProps> = ({ aiResponse }) => {
+    const { enqueueSnackbar } = useSnackbar();
+    const { activeWorkspace } = useWorkspace();
+    const theme = useTheme();
+    const [showHistory, setShowHistory] = useState(false);
+    const [activeChatId, setActiveChatId] = useState<string | null>(null);
+    const scrollAreaRef = useRef<HTMLDivElement>(null);
+    const [chatHistories, setChatHistories] = useState<ChatHistory[]>([]);
+    const [messages, setMessages] = useState<MessageType[]>([]);
+    const [input, setInput] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+
+    const formatDate = (date: Date) => {
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    };
+
+    useEffect(() => {
+        if (scrollAreaRef.current) {
+            scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
+        }
+    }, [messages]);
+
+    useEffect(() => {
+        let initialMessage = `Hello! I'm your assistant. How can I help you with your `;
+        if (activeWorkspace?.name) {
+            initialMessage += `"${activeWorkspace.name}" `;
+        }
+        if (activeWorkspace?.type === 'medical') {
+            initialMessage += 'medical document today?';
+        } else if (activeWorkspace?.type === 'patient') {
+            initialMessage += 'patient document today?';
+        } else {
+            initialMessage += 'documents today?';
+        }
+
+        setMessages([
+            {
+                id: createId(),
+                ChatResponse: initialMessage,
+                isUser: false,
+                timestamp: new Date(),
+            },
+        ]);
+    }, [activeWorkspace]);
+
+    useEffect(() => {
+        if (aiResponse) {
+            const aiMessage: MessageType = {
+                id: createId(),
+                ChatResponse: aiResponse,
+                isUser: false,
+                timestamp: new Date(),
+            };
+            setMessages((prevMessages) => [...prevMessages, aiMessage]);
+        }
+    }, [aiResponse]);
+
+    const sendChatMessage = useCallback(async (message: string) => {
+        setIsLoading(true);
+        try {
+            const result: ChatApiResponse = (await ChatApi.sendMessage(message)).data;
+            console.log("Chat Response : ", result);
+            return result.response || '';
+        } catch (error) {
+            console.error('Error sending message:', error);
+            throw error;
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    const handleSendMessage = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!input.trim()) return;
+
+        const userMessage: MessageType = {
+            id: createId(),
+            ChatResponse: input,
+            isUser: true,
+            timestamp: new Date(),
+        };
+
+        const updatedMessages = [...messages, userMessage];
+        setMessages(updatedMessages);
+        setInput('');
+        setIsLoading(true);
+
+        try {
+            const aiReply = await sendChatMessage(userMessage.ChatResponse as string);
+            console.log("Ai Chat Reply (workspace Chat): ", aiReply);
+            const aiResponse: MessageType = {
+                id: createId(),
+                ChatResponse: aiReply,
+                isUser: false,
+                timestamp: new Date(),
+            };
+
+            const newMessages = [...updatedMessages, aiResponse];
+            setMessages(newMessages);
+
+            if (!activeChatId) {
+                const newChatId = createId();
+                const newChat: ChatHistory = {
+                    id: newChatId,
+                    title: (userMessage.ChatResponse as string).slice(0, 30) + ((userMessage.ChatResponse as string).length > 30 ? '...' : ''),
+                    preview: (userMessage.ChatResponse as string).slice(0, 50) + ((userMessage.ChatResponse as string).length > 50 ? '...' : ''),
+                    timestamp: new Date(),
+                    messages: newMessages,
+                };
+
+                setChatHistories((prev) => [newChat, ...prev]);
+                setActiveChatId(newChatId);
+                enqueueSnackbar('Chat saved', {
+                    variant: 'success',
+                    autoHideDuration: 2000,
+                });
+            } else {
+                setChatHistories((prev) =>
+                    prev.map((chat) =>
+                        chat.id === activeChatId ? { ...chat, messages: newMessages, timestamp: new Date() } : chat
+                    )
+                );
+            }
+        } catch (error) {
+            console.error('Error sending message:', error);
+            const errorMessage: MessageType = {
+                id: createId(),
+                ChatResponse: 'Sorry, I encountered an error processing your request. Please try again.',
+                isUser: false,
+                timestamp: new Date(),
+            };
+
+            setMessages([...updatedMessages, errorMessage]);
+            enqueueSnackbar('Failed to get response from assistant', { variant: 'error' });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const startNewChat = () => {
+        let initialMessage = `Hello! I'm your assistant. How can I help you with your `;
+        if (activeWorkspace?.name) {
+            initialMessage += `"${activeWorkspace.name}" `;
+        }
+        if (activeWorkspace?.type === 'medical') {
+            initialMessage += 'medical document today?';
+        } else if (activeWorkspace?.type === 'patient') {
+            initialMessage += 'patient document today?';
+        } else {
+            initialMessage += 'documents today?';
+        }
+        setMessages([
+            {
+                id: createId(),
+                ChatResponse: initialMessage,
+                isUser: false,
+                timestamp: new Date(),
+            },
+        ]);
+        setActiveChatId(null);
+    };
+
+    const loadChatHistory = (chatId: string) => {
+        const chat = chatHistories.find((c) => c.id === chatId);
+        if (chat) {
+            setMessages(chat.messages);
+            setActiveChatId(chatId);
+        }
+    };
+
+    const handleQuickAction = (action: string) => {
+        switch (action) {
+            case 'summarize-medical':
+                if (activeWorkspace?.type === 'medical' && activeWorkspace?.filePath) {
+                    if (typeof activeWorkspace.filePath === 'string') {
+                        handleSummaryRequest(activeWorkspace.filePath, 'medical');
+                    } else {
+                        enqueueSnackbar('The medical document file path is not valid or missing.', { variant: 'error' });
+                    }
+                } else {
+                    enqueueSnackbar('Please select a medical document first', { variant: 'error' });
+                }
+                break;
+            case 'info-medical':
+                if (activeWorkspace?.type === 'medical') {
+                    setInput('Get key information from this medical document');
+                } else {
+                    enqueueSnackbar('Please select a medical document first', { variant: 'error' });
+                }
+                break;
+            case 'summarize-patient':
+                if (activeWorkspace?.type === 'patient' && activeWorkspace?.filePath) {
+                    if (typeof activeWorkspace.filePath === 'string') {
+                        handleSummaryRequest(activeWorkspace.filePath, 'patient');
+                    } else {
+                        enqueueSnackbar('The patient document file path is not valid or missing.', { variant: 'error' });
+                    }
+                } else {
+                    enqueueSnackbar('Please select a patient document first', { variant: 'error' });
+                }
+                break;
+            case 'info-patient':
+                if (activeWorkspace?.type === 'patient') {
+                    setInput('Get key information from this patient document');
+                } else {
+                    enqueueSnackbar('Please select a patient document first', { variant: 'error' });
+                }
+                break;
+            default:
+                break;
+        }
+    };
+
+    const handleSummaryRequest = async (filePath: string, docType: 'medical' | 'patient') => {
+        const userMessage: MessageType = {
+            id: createId(),
+            ChatResponse: `Generate a summary of this ${docType} document`,
+            isUser: true,
+            timestamp: new Date(),
+        };
+
+        const updatedMessages = [...messages, userMessage];
+        setMessages(updatedMessages);
+        setIsLoading(true);
+
+        try {
+            const aiReply = await sendChatMessage(`Generate a summary of the ${docType} document at: ${filePath}`);
+
+            const summaryResponse: MessageType = {
+                id: createId(),
+                ChatResponse: aiReply || "No summary available",
+                isUser: false,
+                timestamp: new Date(),
+            };
+
+            const newMessages = [...updatedMessages, summaryResponse];
+            setMessages(newMessages);
+
+            if (!activeChatId) {
+                const newChatId = createId();
+                const newChat: ChatHistory = {
+                    id: newChatId,
+                    title: `${docType.charAt(0).toUpperCase() + docType.slice(1)} Summary`,
+                    preview: `Generated summary of ${docType} document`,
+                    timestamp: new Date(),
+                    messages: newMessages,
+                };
+
+                setChatHistories((prev) => [newChat, ...prev]);
+                setActiveChatId(newChatId);
+
+                enqueueSnackbar('Summary generated', {
+                    variant: 'success',
+                    autoHideDuration: 2000,
+                });
+            } else {
+                setChatHistories((prev) =>
+                    prev.map((chat) =>
+                        chat.id === activeChatId ? { ...chat, messages: newMessages, timestamp: new Date() } : chat
+                    )
+                );
+            }
+        } catch (error) {
+            console.error('Error generating summary:', error);
+            const errorMessage: MessageType = {
+                id: createId(),
+                ChatResponse:
+                    'Sorry, I encountered an error generating the summary. Please make sure the file is accessible.',
+                isUser: false,
+                timestamp: new Date(),
+            };
+
+            setMessages([...updatedMessages, errorMessage]);
+            enqueueSnackbar(`Failed to generate ${docType} document summary`, { variant: 'error' });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    return (
+        <>
+            <Box
+                sx={{
+                    display: 'flex',
+                    gap: 2,
+                    height: '100%',
+                    border: 1,
+                    borderRadius: 2,
+                    borderColor: 'divider',
+                }}
+            >
+                {showHistory && (
+                    <Card sx={{ width: '25%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                        <CardContent sx={{ p: 2, flex: 1, overflow: 'hidden' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                                <Typography variant="subtitle1">Recent Conversations</Typography>
+                                <IconButton onClick={() => setShowHistory(false)} size="small">
+                                    <Close fontSize="small" />
+                                </IconButton>
+                            </Box>
+                            <Box sx={{ height: 'calc(100vh - 14rem)', overflow: 'auto' }}>
+                                <List>
+                                    {chatHistories.map((chat) => (
+                                        <ListItem
+                                            key={chat.id}
+                                            component="button"
+                                            onClick={() => loadChatHistory(chat.id)}
+                                            sx={{
+                                                mb: 1,
+                                                borderRadius: 1,
+                                                backgroundColor: activeChatId === chat.id ? 'action.selected' : 'inherit',
+                                                '&:hover': {
+                                                    backgroundColor: 'action.hover',
+                                                },
+                                            }}
+                                        >
+                                            <ListItemText
+                                                primary={chat.title}
+                                                secondary={
+                                                    <>
+                                                        <Typography variant="body2" color="text.secondary" noWrap>
+                                                            {chat.preview}
+                                                        </Typography>
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            {formatDate(chat.timestamp)}
+                                                        </Typography>
+                                                    </>
+                                                }
+                                            />
+                                        </ListItem>
+                                    ))}
+                                </List>
+                            </Box>
+                        </CardContent>
+                    </Card>
+                )}
+
+                <Card
+                    sx={{
+                        width: showHistory ? '75%' : '100%',
+                        overflow: 'hidden',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        height: '100%',
+                    }}
+                >
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            p: 2,
+                            borderBottom: 1,
+                            borderColor: 'divider',
+                        }}
+                    >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Message color="primary" sx={{ color: 'white' }} />
+                            <Typography variant="subtitle1" sx={{ color: 'white' }}>
+                                {activeChatId
+                                    ? chatHistories.find((c) => c.id === activeChatId)?.title || 'Conversation'
+                                    : 'New Conversation'}
+                            </Typography>
+                        </Box>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Button
+                                variant="text"
+                                size="small"
+                                onClick={() => setShowHistory(!showHistory)}
+                                sx={{ color: 'white' }}
+                                startIcon={<History fontSize="small" sx={{ color: 'white' }} />}
+                            >
+                                {showHistory ? 'Hide History' : 'History'}
+                            </Button>
+                            <Button
+                                variant="outlined"
+                                size="small"
+                                onClick={startNewChat}
+                                sx={{ color: 'white', '&:hover': {} }}
+                                startIcon={<Message fontSize="small" sx={{ color: 'white' }} />}
+                            >
+                                New Chat
+                            </Button>
+                        </Box>
+                    </Box>
+
+                    <Box
+                        ref={scrollAreaRef}
+                        sx={{
+                            flex: 1,
+                            overflowY: 'auto',
+                            p: 3,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 0.5,
+                        }}
+                    >
+                        {messages.map((message, index) => {
+                            const prevMessage = messages[index - 1];
+                            const isSameSenderAsPrev = prevMessage ? prevMessage.isUser === message.isUser : false;
+
+                            return (
+                                <Box
+                                    key={message.id}
+                                    sx={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: message.isUser ? 'flex-end' : 'flex-start',
+                                        mt: isSameSenderAsPrev ? 0 : 1.5,
+                                    }}
+                                >
+                                    <Paper
+                                        elevation={1}
+                                        sx={{
+                                            p: 1.5,
+                                            maxWidth: '80%',
+                                            borderRadius: message.isUser
+                                                ? '16px 4px 16px 16px'
+                                                : '4px 16px 16px 16px',
+                                            backgroundColor: message.isUser
+                                                ? theme.palette.primary.light
+                                                : theme.palette.secondary.light,
+                                            color: message.isUser
+                                                ? '#000' // Make user message text black
+                                                : theme.palette.secondary.contrastText,
+                                            boxShadow: '0px 2px 5px rgba(0, 0, 0, 0.1)',
+                                        }}
+                                    >
+                                        <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
+                                            {typeof message.ChatResponse === 'string'
+                                                ? message.ChatResponse
+                                                : typeof message.ChatResponse === 'object'
+                                                ? JSON.stringify(message.ChatResponse, null, 2)
+                                                : null}
+                                        </Typography>
+                                        <Typography
+                                            variant="caption"
+                                            color="text.secondary"
+                                            sx={{ mt: 0.5, display: 'block' }}
+                                        >
+                                            {formatDate(message.timestamp)}
+                                        </Typography>
+                                    </Paper>
+                                </Box>
+                            );
+                        })}
+                        {isLoading && (
+                            <Box sx={{ display: 'flex', justifyContent: 'flex-start', mt: 1 }}>
+                                <CircularProgress size={24} />
+                            </Box>
+                        )}
+                    </Box>
+
+                    <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
+                        {activeWorkspace?.type === 'medical' && (
+                            <Box sx={{ mb: 1, display: 'flex', gap: 1 }}>
+                                <CustomButton onClick={() => handleQuickAction('summarize-medical')}>
+                                    Summarize Medical Doc
+                                </CustomButton>
+                                <CustomButton onClick={() => handleQuickAction('info-medical')}>
+                                    Get Medical Info
+                                </CustomButton>
+                            </Box>
+                        )}
+                        {activeWorkspace?.type === 'patient' && (
+                            <Box sx={{ mb: 1, display: 'flex', gap: 1 }}>
+                                <CustomButton onClick={() => handleQuickAction('summarize-patient')}>
+                                    Summarize Patient Doc
+                                </CustomButton>
+                                <CustomButton onClick={() => handleQuickAction('info-patient')}>
+                                    Get Patient Info
+                                </CustomButton>
+                            </Box>
+                        )}
+                        <form onSubmit={handleSendMessage}>
+                            <TextField
+                                fullWidth
+                                label="Send a message"
+                                variant="outlined"
+                                value={input}
+                                onChange={(e) => setInput(e.target.value)}
+                                InputProps={{
+                                    endAdornment: (
+                                        <IconButton type="submit" disabled={isLoading}>
+                                            <Send color="primary" />
+                                        </IconButton>
+                                    ),
+                                }}
+                            />
+                        </form>
+                    </Box>
+                </Card>
+            </Box>
+        </>
+    );
+};
+
+export default WorkspaceChat;

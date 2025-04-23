@@ -7,7 +7,6 @@ import {
   Divider,
   Checkbox,
   Radio,
-  ListItemIcon,
   ListItemText,
   Typography,
   styled,
@@ -15,7 +14,6 @@ import {
 } from "@mui/material";
 import {
   ArrowRight as ChevronRight,
-  Check,
   Circle,
 } from "@mui/icons-material";
 
@@ -37,7 +35,10 @@ const StyledMenu = styled((props: MenuProps) => (
   "& .MuiPaper-root": {
     borderRadius: 6,
     minWidth: 180,
-    color: theme.palette.mode === "light" ? "rgb(55, 65, 81)" : theme.palette.grey[300],
+    color:
+      theme.palette.mode === "light"
+        ? "rgb(55, 65, 81)"
+        : theme.palette.grey[300],
     boxShadow:
       "rgb(255, 255, 255) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 0px 0px 1px, rgba(0, 0, 0, 0.1) 0px 10px 15px -3px, rgba(0, 0, 0, 0.05) 0px 4px 6px -2px",
     "& .MuiMenu-list": {
@@ -76,25 +77,32 @@ const DropdownMenu = (props: MenuProps) => {
   return <StyledMenu {...props} />;
 };
 
-const DropdownMenuTrigger = React.forwardRef<HTMLButtonElement, any>((props, ref) => {
+const DropdownMenuTrigger = React.forwardRef<
+  HTMLButtonElement,
+  React.ButtonHTMLAttributes<HTMLButtonElement>
+>((props, ref) => {
   return <button ref={ref} {...props} />;
 });
+DropdownMenuTrigger.displayName = "DropdownMenuTrigger";
 
 const DropdownMenuContent = React.forwardRef<HTMLDivElement, MenuProps>((props, ref) => {
   return <DropdownMenu ref={ref} {...props} />;
 });
+DropdownMenuContent.displayName = "DropdownMenuContent";
 
-const DropdownMenuItem = React.forwardRef<HTMLLIElement, MenuItemProps & { inset?: boolean }>(
-  ({ inset, ...props }, ref) => {
-    return (
-      <StyledMenuItem
-        ref={ref}
-        sx={{ paddingLeft: inset ? 4 : 2 }}
-        {...props}
-      />
-    );
-  }
-);
+const DropdownMenuItem = React.forwardRef<
+  HTMLLIElement,
+  MenuItemProps & { inset?: boolean }
+>(({ inset, ...props }, ref) => {
+  return (
+    <StyledMenuItem
+      ref={ref}
+      sx={{ paddingLeft: inset ? 4 : 2 }}
+      {...props}
+    />
+  );
+});
+DropdownMenuItem.displayName = "DropdownMenuItem";
 
 const DropdownMenuCheckboxItem = React.forwardRef<
   HTMLLIElement,
@@ -111,6 +119,7 @@ const DropdownMenuCheckboxItem = React.forwardRef<
     </StyledMenuItem>
   );
 });
+DropdownMenuCheckboxItem.displayName = "DropdownMenuCheckboxItem";
 
 const DropdownMenuRadioItem = React.forwardRef<
   HTMLLIElement,
@@ -129,15 +138,16 @@ const DropdownMenuRadioItem = React.forwardRef<
     </StyledMenuItem>
   );
 });
+DropdownMenuRadioItem.displayName = "DropdownMenuRadioItem";
 
-const DropdownMenuLabel = styled((props: MenuItemProps & { inset?: boolean }) => {
-  const { inset, ...rest } = props;
+const DropdownMenuLabel = styled((props: MenuItemProps) => {
+  const { ...rest } = props;
   return <MenuItem {...rest} />;
-})(({ theme, inset }) => ({
+})(({ theme }) => ({
   fontSize: "0.75rem",
   fontWeight: 600,
   color: theme.palette.text.secondary,
-  paddingLeft: inset ? theme.spacing(4) : theme.spacing(2),
+  paddingLeft: theme.spacing(2),
   "&:hover": {
     backgroundColor: "transparent",
     cursor: "default",
@@ -148,14 +158,13 @@ const DropdownMenuSeparator = () => {
   return <Divider sx={{ my: 0.5 }} />;
 };
 
-const DropdownMenuShortcut = styled(Typography)(({ theme }) => ({
+const DropdownMenuShortcut = styled(Typography)({
   marginLeft: "auto",
   fontSize: "0.75rem",
   letterSpacing: "0.1em",
   opacity: 0.6,
-}));
+});
 
-// Submenu components
 const DropdownMenuSubTrigger = React.forwardRef<
   HTMLLIElement,
   MenuItemProps & { inset?: boolean }
@@ -171,6 +180,7 @@ const DropdownMenuSubTrigger = React.forwardRef<
     </StyledMenuItem>
   );
 });
+DropdownMenuSubTrigger.displayName = "DropdownMenuSubTrigger";
 
 const DropdownMenuSubContent = styled((props: MenuProps) => (
   <Menu
@@ -185,15 +195,14 @@ const DropdownMenuSubContent = styled((props: MenuProps) => (
     }}
     {...props}
   />
-))(({ theme }) => ({
+))(() => ({
   "& .MuiPaper-root": {
     borderRadius: 6,
     minWidth: 180,
-    marginLeft: theme.spacing(0.5),
+    marginLeft: 4,
   },
 }));
 
-// Group components
 const DropdownMenuGroup = (props: { children: React.ReactNode }) => {
   return <div>{props.children}</div>;
 };
@@ -202,12 +211,10 @@ const DropdownMenuRadioGroup = (props: { children: React.ReactNode }) => {
   return <div>{props.children}</div>;
 };
 
-// Portal component (not typically needed in MUI as it handles portals internally)
 const DropdownMenuPortal = (props: { children: React.ReactNode }) => {
   return <>{props.children}</>;
 };
 
-// Sub component (for managing submenu state)
 const DropdownMenuSub = (props: { children: React.ReactNode }) => {
   return <>{props.children}</>;
 };

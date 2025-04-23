@@ -1,4 +1,4 @@
-import axios, { AxiosError, AxiosResponse } from 'axios';
+import axios, { AxiosResponse } from 'axios';
 import { handleApiError } from '@/utils/apiErrorHandling';
 
 // Define types for MetProAi API responses (adjust based on your Flask API)
@@ -16,7 +16,7 @@ interface ListDocumentsResponse {
     documents: { id: string; name: string; /* other properties */ }[]; // adjust
 }
 
-interface ChatResponse {
+export interface ChatResponse {
     response: string;
     // define other properties
 }
@@ -140,24 +140,15 @@ export const MetProAiAPI = {
         }
     },
     // Chat with Medical Data
-    sendMedicalChatMessage: async (message: string): Promise<ChatResponse> => {
+    sendChatMessage: async (message: string): Promise<ChatResponse> => {
         try {
-            const response: AxiosResponse<ChatResponse> = await metProAiApi.post('/chat/medical', { message }); // endpoint
+            const response: AxiosResponse<ChatResponse> = await metProAiApi.post('/chat', { message }); // endpoint
             return response.data;
         } catch (error) {
             throw handleApiError(error, 'Error sending medical chat message');
         }
     },
 
-    // Chat with Patient Data
-    sendPatientChatMessage: async (message: string): Promise<ChatResponse> => {
-        try {
-            const response: AxiosResponse<ChatResponse> = await metProAiApi.post('/chat/patient', { message }); // endpoint
-            return response.data;
-        } catch (error) {
-            throw handleApiError(error, 'Error sending patient chat message');
-        }
-    },
     // Reset All Data
     resetAllData: async (): Promise<ApiResponse> => {
         try {

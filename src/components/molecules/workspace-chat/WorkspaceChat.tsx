@@ -1,30 +1,31 @@
 import CustomButton from '@/components/atoms/button/CustomButton';
 import { useWorkspace } from '@/context/WorkspaceContext';
-import { ChatApi } from '@/lib/api/chatApi';
+//import { ChatApi } from '@/lib/api/chatApi';
 import { Close, History, Message, Send } from '@mui/icons-material';
 import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  CircularProgress,
-  Divider,
-  IconButton,
-  List,
-  ListItem,
-  ListItemText,
-  Paper,
-  TextField,
-  Typography,
-  useTheme
+    Box,
+    Button,
+    Card,
+    CardContent,
+    CircularProgress,
+    Divider,
+    IconButton,
+    List,
+    ListItem,
+    ListItemText,
+    Paper,
+    TextField,
+    Typography,
+    useTheme
 } from '@mui/material';
 import { useSnackbar } from 'notistack';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import WorkspaceSelector from '../Workspace-Selector/WorkspaceSelector';
+import { ChatResponse, MetProAiAPI } from '@/lib/api/flask-api';
 
 interface MessageType {
     id: string;
-    ChatResponse: any;
+    ChatResponse: unknown;
     isUser: boolean;
     timestamp: Date;
 }
@@ -37,13 +38,7 @@ interface ChatHistory {
     messages: MessageType[];
 }
 
-const createId = () => {
-    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-        return crypto.randomUUID();
-    }
-    console.warn('crypto.randomUUID not available, using fallback ID generation.');
-    return Date.now().toString(36) + Math.random().toString(36).substring(2);
-};
+const createId = () => Date.now().toString();
 
 interface WorkspaceChatProps {
     aiResponse?: string | null;
@@ -105,19 +100,20 @@ const WorkspaceChat: React.FC<WorkspaceChatProps> = ({ aiResponse }) => {
         }
     }, [aiResponse]);
 
-    const sendChatMessage = useCallback(async (message: string, isJdSearch: boolean = false) => {
+    const sendChatMessage = async (message: string) => {
         setIsLoading(true);
         try {
-            const response = await ChatApi.sendMessage(message);
-            console.log("Chat Response : ", response)
-            return response.data?.response || '';
+            const result: ChatResponse  = await MetProAiAPI.sendChatMessage(message);
+            console.log("Chat Response : ", result);
+            // Backend returns an object with 'response' field
+            return result.response || '';
         } catch (error) {
             console.error('Error sending message:', error);
             throw error;
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    };
 
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -137,9 +133,8 @@ const WorkspaceChat: React.FC<WorkspaceChatProps> = ({ aiResponse }) => {
         setIsLoading(true);
 
         try {
-            const jdSearch = activeWorkspace?.type === 'jd' || false;
-            const aiReply = await sendChatMessage(userMessage.ChatResponse, jdSearch);
-console.log("Ai Chat Reply (workspace Chat): ", aiReply)
+            const aiReply = await MetProAiAPI.sendChatMessage(userMessage.ChatResponse as string);
+            console.log("Ai Chat Reply (workspace Chat): ", aiReply)
             const aiResponse: MessageType = {
                 id: createId(),
                 ChatResponse: aiReply,
@@ -154,8 +149,8 @@ console.log("Ai Chat Reply (workspace Chat): ", aiReply)
                 const newChatId = createId();
                 const newChat: ChatHistory = {
                     id: newChatId,
-                    title: userMessage.ChatResponse.slice(0, 30) + (userMessage.ChatResponse.length > 30 ? '...' : ''),
-                    preview: userMessage.ChatResponse.slice(0, 50) + (userMessage.ChatResponse.length > 50 ? '...' : ''),
+                    title: (userMessage.ChatResponse as string).slice(0, 30) + ((userMessage.ChatResponse as string).length > 30 ? '...' : ''),
+                    preview: (userMessage.ChatResponse as string).slice(0, 50) + ((userMessage.ChatResponse as string).length > 50 ? '...' : ''),
                     timestamp: new Date(),
                     messages: newMessages,
                 };
@@ -212,17 +207,17 @@ console.log("Ai Chat Reply (workspace Chat): ", aiReply)
     const handleQuickAction = (action: string) => {
         switch (action) {
             case 'summarize':
-                if (activeWorkspace?.type === 'medical' && activeWorkspace?.filePath) {
+                if ((activeWorkspace?.type as string) === 'medical' && activeWorkspace?.filePath) {
                     if (typeof activeWorkspace.filePath === 'string') {
                         handleSummaryRequest(activeWorkspace.filePath, 'medical');
                     } else {
                         enqueueSnackbar('The file path is not valid or missing.', { variant: 'error' });
                     }
-                } else if (activeWorkspace?.type === 'patient' && activeWorkspace?.filePath) {
+                } else if ((activeWorkspace?.type as string) === 'patient' && activeWorkspace?.filePath) {
                     if (typeof activeWorkspace.filePath === 'string') {
                         handleSummaryRequest(activeWorkspace.filePath, 'patient');
                     } else {
-                         enqueueSnackbar('The file path is not valid or missing.', { variant: 'error' });
+                        enqueueSnackbar('The file path is not valid or missing.', { variant: 'error' });
                     }
                 }
                 else {
@@ -230,9 +225,9 @@ console.log("Ai Chat Reply (workspace Chat): ", aiReply)
                 }
                 break;
             case 'info':
-                if (activeWorkspace?.type === 'medical') {
+                if ((activeWorkspace?.type as string) === 'medical') {
                     setInput('Get key information from this medical document');
-                } else if (activeWorkspace?.type === 'patient') {
+                } else if ((activeWorkspace?.type as string) === 'patient') {
                     setInput('Get key information from this patient document');
                 }
                 break;
@@ -406,9 +401,11 @@ console.log("Ai Chat Reply (workspace Chat): ", aiReply)
                                 variant="outlined"
                                 size="small"
                                 onClick={startNewChat}
-                                sx={{ color: 'white', '&:hover': {
-                                    
-                                } }}
+                                sx={{
+                                    color: 'white', '&:hover': {
+
+                                    }
+                                }}
                                 startIcon={<Message fontSize="small" sx={{ color: 'white' }} />}
                             >
                                 New Chat
@@ -514,7 +511,7 @@ console.log("Ai Chat Reply (workspace Chat): ", aiReply)
                                 borderColor: 'divider',
                             }}
                         >
-                            {activeWorkspace.type === 'medical' && (
+                            {(activeWorkspace.type as string) === 'medical' && (
                                 <>
                                     <Button
                                         size="small"
@@ -534,7 +531,7 @@ console.log("Ai Chat Reply (workspace Chat): ", aiReply)
                                     </Button>
                                 </>
                             )}
-                            {activeWorkspace.type === 'patient' && (
+                            {(activeWorkspace.type as string) === 'patient' && (
                                 <><Button
                                     size="small"
                                     variant="text"
@@ -543,14 +540,14 @@ console.log("Ai Chat Reply (workspace Chat): ", aiReply)
                                 >
                                     Summarize Patient Doc
                                 </Button>
-                                <Button
-                                    size="small"
-                                    variant="text"
-                                    onClick={() => handleQuickAction('info')}
-                                    sx={{ fontSize: '0.75rem', color: theme.palette.primary.main }}
-                                >
-                                    Get Patient Info
-                                </Button>
+                                    <Button
+                                        size="small"
+                                        variant="text"
+                                        onClick={() => handleQuickAction('info')}
+                                        sx={{ fontSize: '0.75rem', color: theme.palette.primary.main }}
+                                    >
+                                        Get Patient Info
+                                    </Button>
                                 </>
                             )}
                         </Box>
@@ -619,4 +616,3 @@ console.log("Ai Chat Reply (workspace Chat): ", aiReply)
 };
 
 export default WorkspaceChat;
-

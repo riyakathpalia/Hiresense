@@ -2,8 +2,8 @@ import axios, { AxiosError, AxiosResponse } from 'axios';
 
 // Create an axios instance with default configurations for MetProAi
 const metProAiApi = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
-  headers: {
+    baseURL: process.env.NEXT_PUBLIC_API_URL,
+    headers: {
         'Content-Type': 'application/json',
     },
     timeout: 3000000, // 30 min timeout
@@ -133,20 +133,20 @@ export const MetProAiAPI = {
     },
 
     // List Medical Documents
-    listMedicalDocuments: async (): Promise<{ documents: any[] }> => { // Replace 'any' with the actual document type
+    listMedicalDocuments: async (): Promise<{ documents: Document[] }> => {
         try {
             const response = await metProAiApi.get('/medical_documents');
-            return response.data as { documents: any[] };
+            return response.data as { documents: Document[] };
         } catch (error) {
             throw handleApiError(error, 'Error fetching medical documents');
         }
     },
 
     // List Patient Documents
-    listPatientDocuments: async (): Promise<{ documents: any[] }> => { // Replace 'any' with the actual document type
+    listPatientDocuments: async (): Promise<{ documents: Document[] }> => {
         try {
             const response = await metProAiApi.get('/patient_documents');
-            return response.data as { documents: any[] };
+            return response.data as { documents: Document[] };
         } catch (error) {
             throw handleApiError(error, 'Error fetching patient documents');
         }

@@ -1,4 +1,5 @@
 // src/app/api/upload/medical/route.ts
+import { Blob } from 'buffer';
 import { existsSync } from 'fs';
 import { mkdir, writeFile } from 'fs/promises';
 import { NextRequest, NextResponse } from 'next/server';
@@ -46,15 +47,15 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData();
 
     // Extract workspace name from form data
-    const workspaceName = formData.get('workspaceName') as string;
-    if (!workspaceName) {
-      return NextResponse.json({ error: 'Workspace name is required' }, { status: 400 });
-    }
+    // const workspaceName = formData.get('workspaceName') as string;
+    // if (!workspaceName) {
+    //   return NextResponse.json({ error: 'Workspace name is required' }, { status: 400 });
+    // }
 
     // Create workspace directory under 'medical' folder
-    const WORKSPACE_DIR = path.join(UPLOAD_DIR, workspaceName, 'medical');
-    if (!existsSync(WORKSPACE_DIR)) {
-      await mkdir(WORKSPACE_DIR, { recursive: true });
+    const MEDICAL_DOC = path.join(UPLOAD_DIR, 'medical_documents');
+    if (!existsSync(MEDICAL_DOC)) {
+      await mkdir(MEDICAL_DOC, { recursive: true });
     }
 
     // Get all uploaded files
@@ -68,36 +69,41 @@ export async function POST(req: NextRequest) {
 
     // Loop through and process each file
     for (const file of files) {
-      // Skip invalid file entries
-      if (!(file instanceof File)) continue;
+      if (!(file instanceof Blob)) {
+        console.log('Invalid file object:', file);
+        continue;
+      }
 
-      // Skip disallowed file types
-      if (!ALLOWED_MIME_TYPES.includes(file.type)) continue;
+      // Validate file type
+      if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+        console.log(`File type not allowed: ${file.type}`);
+        continue;
+      }
 
-      // Skip files exceeding max size
-      if (file.size > MAX_FILE_SIZE) continue;
+      // Validate file size
+      if (file.size > MAX_FILE_SIZE) {
+        continue;
+      }
 
-      // Accumulate total upload size
       totalSize += file.size;
       if (totalSize > MAX_TOTAL_SIZE) {
         return NextResponse.json({ error: 'Total upload size exceeds limit' }, { status: 400 });
       }
 
-      // Generate a unique file name to avoid overwriting
-      const fileExtension = path.extname(file.name);
+      // Create a unique filename to prevent overwriting
+      const fileExtension = path.extname((file as File).name);
       const uniqueFilename = `${uuidv4()}${fileExtension}`;
-      const fullPath = path.join(WORKSPACE_DIR, uniqueFilename);
+      const fullPath = path.join(MEDICAL_DOC, uniqueFilename);
 
-      // Convert file to buffer and write to disk
+      // Save the file
       const buffer = Buffer.from(await file.arrayBuffer());
       await writeFile(fullPath, buffer);
 
-      // Add file info to response
       processedFiles.push({
-        originalname: file.name,
+        originalName: (file as File).name,
         savedAs: uniqueFilename,
         size: file.size,
-        type: file.type,
+        type: file.type
       });
     }
 

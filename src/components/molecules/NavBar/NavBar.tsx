@@ -1,7 +1,7 @@
 import React from "react";
-import { AppBar, Toolbar, Typography, Box,Button, IconButton } from "@mui/material";
-import CustomButton from "@/components/atoms/button/CustomButton";
-import { LogIn, UserPlus } from "lucide-react";
+import { AppBar, Toolbar, Typography, Box,Button } from "@mui/material";
+//import CustomButton from "@/components/atoms/button/CustomButton";
+//import { LogIn, UserPlus } from "lucide-react";
 import Image from "next/image";
 
 const Navbar = () => {

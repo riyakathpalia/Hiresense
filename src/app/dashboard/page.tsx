@@ -2,30 +2,29 @@
 import WorkspaceChat from "@/components/molecules/workspace-chat/WorkspaceChat";
 import WorkspaceUpload from "@/components/molecules/workspace-upload/WorkspaceUpload";
 import { ensureGuestId } from "@/utils/userAgent";
-import { Box, Container, Typography, useTheme } from "@mui/material";
+import { Box, Container, Typography } from "@mui/material";
 import { useEffect } from "react";
 
 const MetProAiHomePage = () => {
-  const theme = useTheme();
   useEffect(() => {
     ensureGuestId();
   }, []);
 
   // Dummy upload handlers - replace with your actual logic
-  const handleMedicalUpload = async (files: File[], workspaceName: string) => {
-    console.log("Uploading medical documents for MetProAi:", files, workspaceName);
-    return { success: true, message: "Medical documents uploaded to MetProAi" };
-  };
+  // const handleMedicalUpload = async (files: File[], workspaceName: string) => {
+  //   console.log("Uploading medical documents for MetProAi:", files, workspaceName);
+  //   return { success: true, message: "Medical documents uploaded to MetProAi" };
+  // };
 
-  const handlePatientUpload = async (files: File[], workspaceName: string) => {
-    console.log("Uploading patient documents for MetProAi:", files, workspaceName);
-    return { success: true, message: "Patient documents uploaded to MetProAi" };
-  };
+  // const handlePatientUpload = async (files: File[], workspaceName: string) => {
+  //   console.log("Uploading patient documents for MetProAi:", files, workspaceName);
+  //   return { success: true, message: "Patient documents uploaded to MetProAi" };
+  // };
 
-  const handleUploadSuccess = (response: any) => {
-    console.log("MetProAi Upload success:", response);
-    // Handle success feedback
-  };
+  // const handleUploadSuccess = (response: any) => {
+  //   console.log("MetProAi Upload success:", response);
+  //   // Handle success feedback
+  // };
 
   return (
     <>

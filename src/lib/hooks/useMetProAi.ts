@@ -2,13 +2,16 @@ import { MetProAiAPI } from '@/lib/api/flask-api'; // Assuming your Flask API se
 import axios from 'axios';
 import { useCallback, useState } from 'react';
 import { MetProAiNextAPI } from '../api/next-api';
+import { MedicalDocument } from "@/types/medicalDocument";
+import { PatientDocument } from "@/types/patientDocument";
+
 
 export const useMetProAi = () => {
-    const [medicalDocumentsData, setMedicalDocumentsData] = useState<any[]>([]);
+    const [medicalDocumentsData, setMedicalDocumentsData] = useState<MedicalDocument[]>([]);
     const [medicalDocumentsLoading, setMedicalDocumentsLoading] = useState(false);
     const [medicalDocumentsError, setMedicalDocumentsError] = useState<string | null>(null);
 
-    const [patientDocumentsData, setPatientDocumentsData] = useState<any[]>([]);
+    const [patientDocumentsData, setPatientDocumentsData] = useState<PatientDocument[]>([]);
     const [patientDocumentsLoading, setPatientDocumentsLoading] = useState(false);
     const [patientDocumentsError, setPatientDocumentsError] = useState<string | null>(null);
 
@@ -46,7 +49,7 @@ export const useMetProAi = () => {
                 console.log('Medical documents uploaded (Next API):', nextApiResponse);
 
                 // 2.  Prepare file paths for the Flask API (adjust as needed based on your Next.js API response)
-                const filePaths = nextApiResponse.files.map((file: any) => file.savedAs);
+                const filePaths = nextApiResponse.files.map((file) => file.savedAs);
                 console.log("File paths : (upload Medical  Doc Hook) ", filePaths)
 
                 // 3.  Call Flask API to process the uploaded files.  Adapt this to match your Flask API.
@@ -145,15 +148,16 @@ export const useMetProAi = () => {
                 console.log('Patient documents uploaded (Next API):', nextApiResponse);
 
                 // 2. Prepare file paths
-                const filePaths = nextApiResponse.files.map((file: any) => file.savedAs);
+                const filePaths = nextApiResponse.files.map((file) => file.savedAs);
                 console.log("File paths : (upload Patient  Doc Hook) ", filePaths)
 
                 // 3. Call Flask API, passing file paths
+                console.log("Uploading patient documents: (API - Flask)", { file_paths: filePaths });
                 const flaskResponse = await MetProAiAPI.uploadPatientDocuments({
                     file_paths: filePaths,
                 });
                 console.log('Patient documents uploaded (Flask API):', flaskResponse);
-        
+
 
                 return nextApiResponse; // Or return data from Flask if needed.
             } catch (err: unknown) {
@@ -220,6 +224,13 @@ export const useMetProAi = () => {
         deleteMedicalDocument,
         extractMedicalPdf,
         uploadPatientDocuments,
+        patientDocumentsData,
+        patientDocumentsLoading,
+        patientDocumentsError,
+        fetchPatientDocuments,
+        deletePatientDocument,
+        extractPatientPdf,
+
     };
 };
 

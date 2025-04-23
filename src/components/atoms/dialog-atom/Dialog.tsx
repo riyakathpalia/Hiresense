@@ -9,7 +9,7 @@ import {
   IconButton,
   Slide,
   Fade,
-  Box,
+  // Box,
   styled,
 } from "@mui/material";
 import { TransitionProps } from "@mui/material/transitions";
@@ -17,7 +17,7 @@ import { Close } from "@mui/icons-material";
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
-    children: React.ReactElement<any, any>;
+    children: React.ReactElement;
   },
   ref: React.Ref<unknown>
 ) {
@@ -49,6 +49,7 @@ const DialogContent = React.forwardRef<
 >(({ className, children, ...props }, ref) => {
   return (
     <DialogRoot
+      className={className}
       TransitionComponent={Transition}
       ref={ref}
       {...props}
@@ -73,7 +74,7 @@ const DialogContent = React.forwardRef<
         {children}
         <IconButton
           aria-label="close"
-          onClick={props.onClose as any}
+          onClick={(event) => props.onClose?.(event, "escapeKeyDown")}
           sx={{
             position: "absolute",
             right: 8,
@@ -83,6 +84,7 @@ const DialogContent = React.forwardRef<
         >
           <Close />
         </IconButton>
+
       </MuiDialogContent>
     </DialogRoot>
   );

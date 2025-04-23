@@ -29,7 +29,7 @@ export const getFileNameFromPath = (filePath: string): string => {
  * @param fallback A fallback message if the error is undefined
  * @returns Formatted error message
  */
-export const formatErrorMessage = (error: any, fallback: string = 'An unknown error occurred'): string => {
+export const formatErrorMessage = (error: unknown, fallback: string = 'An unknown error occurred'): string => {
   if (!error) {
     return fallback;
   }
@@ -38,28 +38,28 @@ export const formatErrorMessage = (error: any, fallback: string = 'An unknown er
     return error;
   }
 
-  if (error.message) {
+  if (error instanceof Error) {
     return error.message;
   }
 
-  if (error.error) {
-    return error.error;
+  // Handle specific AxiosError case
+  if (axios.isAxiosError(error)) {
+    return createErrorMessage(error);
   }
 
   return fallback;
 };
-
 // src/utils/errorUtils.ts
 
 import { AxiosError } from 'axios';
 import ApiResponse from '@/lib/api/axios-config';
-import { uploadFilesViaSSH } from '@/lib/api/upload';
+//import { uploadFilesViaSSH } from '@/lib/api/upload';
 
 
-interface ApiResponse<T = any> {
+interface ApiResponse {
   message?: string;
   error?: string;
-  [key: string]: any;
+  [key: string]: string | undefined; // Avoiding any by specifying string or undefined as a fallback for any additional properties
 }
 /**
  * Creates a toast-friendly error message from an API error
@@ -120,29 +120,25 @@ export const createErrorMessage = (error: unknown, defaultMessage: string = 'An 
   return defaultMessage;
 };
 
-// Function to handle file input for resumes and job descriptions
+// Assuming the callback returns an object or a specific type (replace `unknown` with the correct type)
 export const handleFileInputChange = async (
   files: File[],
-  callback: (files: File[], workspaceName: string,) => Promise<any>,
+  callback: (files: File[], workspaceName: string) => Promise<unknown>, // Replace `unknown` with the expected return type
   workspaceName: string
 ) => {
-
   if (!files || files.length === 0) return;
 
   // Convert FileList to array of file paths
-  // Note: In a real browser environment, this would need to use the File API
-  // This is a simplified example for local file system paths
   const filePaths = Array.from(files).map(file => {
     // In a real implementation, you would handle this differently
-    // This is just an example of how you might simulate file paths
     return `${file.name}`;
   });
 
   // Convert FileList to array of Files
   const filesArray = Array.from(files);
-  // Call the upload function
-  //uploadFilesViaSSH(filesArray, callback);
-  console.log(filePaths)
+
+  // Call the callback function
+  console.log(filePaths);
   const response = await callback(filesArray, workspaceName);
   return response;
 };

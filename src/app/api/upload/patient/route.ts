@@ -1,7 +1,8 @@
 // app/api/upload/patient/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
+import { Blob } from 'buffer';
 import { existsSync } from 'fs';
+import { mkdir, writeFile } from 'fs/promises';
+import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -35,9 +36,8 @@ export async function POST(req: NextRequest) {
       await mkdir(UPLOAD_DIR, { recursive: true });
     }
 
+    // Check if request content is multipart form data
     const contentType = req.headers.get('content-type') || '';
-
-    // Validate content type
     if (!contentType.includes('multipart/form-data')) {
       return NextResponse.json({ error: 'Content type must be multipart/form-data' }, { status: 400 });
     }
@@ -45,24 +45,20 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData();
 
     // Extract workspace name
-    const workspaceName = formData.get('workspaceName') as string;
-    if (!workspaceName) {
-      return NextResponse.json({ error: 'Workspace name is required' }, { status: 400 });
-    }
+    // const workspaceName = formData.get('workspaceName') as string;
+    // if (!workspaceName) {
+    //   return NextResponse.json({ error: 'Workspace name is required' }, { status: 400 });
+    // }
 
     // Create directory: /uploads/<workspaceName>/patient
-    const WORKSPACE_DIR = path.join(UPLOAD_DIR, workspaceName, 'patient');
-    console.log('Workspace directory:', WORKSPACE_DIR);
-    if (!existsSync(WORKSPACE_DIR)) {
-      await mkdir(WORKSPACE_DIR, { recursive: true });
+    const PATIENT_DOC = path.join(UPLOAD_DIR, 'patient_documents');
+    console.log('Workspace directory:', PATIENT_DOC);
+    if (!existsSync(PATIENT_DOC)) {
+      await mkdir(PATIENT_DOC, { recursive: true });
     }
 
     // Get all uploaded files
     const files = formData.getAll('file');
-    console.log('Form data:', formData);
-    console.log('Content type:', contentType);
-    console.log('Files received:', files);
-
     if (files.length === 0) {
       return NextResponse.json({ error: 'No files uploaded' }, { status: 400 });
     }
@@ -72,12 +68,12 @@ export async function POST(req: NextRequest) {
 
     // Process each file
     for (const file of files) {
-      if (!(file instanceof File)) {
+      if (!(file instanceof Blob)) {
         console.log('Invalid file object:', file);
         continue;
       }
 
-      // Validate MIME type
+      // Validate file type
       if (!ALLOWED_MIME_TYPES.includes(file.type)) {
         console.log(`File type not allowed: ${file.type}`);
         continue;
@@ -93,18 +89,17 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Total upload size exceeds limit' }, { status: 400 });
       }
 
-      // Generate unique filename
-      const fileExtension = path.extname(file.name);
+      // Create a unique filename to prevent overwriting
+      const fileExtension = path.extname((file as File).name);
       const uniqueFilename = `${uuidv4()}${fileExtension}`;
-      const WORKSPACE_DIR_PATH = path.join(WORKSPACE_DIR, uniqueFilename);
+      const fullPath = path.join(PATIENT_DOC, uniqueFilename);
 
-      // Write file to disk
+      // Save the file
       const buffer = Buffer.from(await file.arrayBuffer());
-      await writeFile(WORKSPACE_DIR_PATH, buffer);
+      await writeFile(fullPath, buffer);
 
-      // Add metadata to result
       processedFiles.push({
-        originalName: file.name,
+        originalName: (file as File).name,
         savedAs: uniqueFilename,
         size: file.size,
         type: file.type

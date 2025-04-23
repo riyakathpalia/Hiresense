@@ -2,7 +2,7 @@
 import { ButtonBase, CircularProgress } from '@mui/material';
 import { CustomButtonProps } from '../../../types/CustomButtonProps';
 import { useTheme } from '@mui/material/styles';
-import { fontWeight } from '@mui/system';
+//import { fontWeight } from '@mui/system';
 
 
 const getSizeStyles = (size: string) => {
@@ -23,7 +23,7 @@ const getSizeStyles = (size: string) => {
 const CustomButton = ({
   variant = 'primary',
   size = 'medium',
-  fullWidth,
+  // fullWidth,
   startIcon,
   endIcon,
   loading,

@@ -1,10 +1,7 @@
 import * as React from "react";
 import TextField, { TextFieldProps } from "@mui/material/TextField";
 
-
-export interface TextareaProps extends Omit<TextFieldProps, "color"> {}
-
-const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
+const Textarea = React.forwardRef<HTMLTextAreaElement, Omit<TextFieldProps, "color">>(
   ({ className, ...props }, ref) => {
     return (
       <TextField
@@ -12,6 +9,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         multiline
         minRows={3}
         fullWidth
+        className={className}
         variant="outlined"
         {...props}
       />
@@ -22,3 +20,4 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
 Textarea.displayName = "Textarea";
 
 export { Textarea };
+export type { TextFieldProps as TextareaProps };
