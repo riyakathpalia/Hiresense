@@ -1,5 +1,5 @@
-import axios, { AxiosResponse } from 'axios';
 import { handleApiError } from '@/utils/apiErrorHandling';
+import axios, { AxiosResponse } from 'axios';
 
 // Define types for MetProAi API responses (adjust based on your Flask API)
 interface ApiResponse {
@@ -62,6 +62,7 @@ export const MetProAiAPI = {
     uploadMedicalDocuments: async (data: { file_paths: string[] }): Promise<UploadResponse> => { // Changed input type
         console.log('Uploading medical documents: (API - Flask)', data);
         try {
+            console.log("ENV FLASK : ", process.env.NEXT_PUBLIC_API_URL);
             const response: AxiosResponse<UploadResponse> = await metProAiApi.post('/upload/medical_documents', data); // endpoint
             return response.data;
         } catch (error) {
@@ -140,10 +141,10 @@ export const MetProAiAPI = {
         }
     },
     // Chat with Medical Data
-    sendChatMessage: async (message: string): Promise<ChatResponse> => {
+    sendChatMessage: async (message: string): Promise<string> => {
         try {
-            const response: AxiosResponse<ChatResponse> = await metProAiApi.post('/chat', { message }); // endpoint
-            return response.data;
+            const response = await metProAiApi.post('/chat', { message }); // endpoint
+            return response.data.response;
         } catch (error) {
             throw handleApiError(error, 'Error sending medical chat message');
         }

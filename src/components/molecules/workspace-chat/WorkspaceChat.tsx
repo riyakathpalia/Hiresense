@@ -100,13 +100,13 @@ const WorkspaceChat: React.FC<WorkspaceChatProps> = ({ aiResponse }) => {
         }
     }, [aiResponse]);
 
+    // In WorkspaceChat.tsx
     const sendChatMessage = async (message: string) => {
         setIsLoading(true);
         try {
-            const result: ChatResponse  = await MetProAiAPI.sendChatMessage(message);
-            console.log("Chat Response : ", result);
-            // Backend returns an object with 'response' field
-            return result.response || '';
+            const result = await MetProAiAPI.sendChatMessage(message); // Let TypeScript infer the type
+            console.log("Chat Response:", result);
+            return result; // result is now string
         } catch (error) {
             console.error('Error sending message:', error);
             throw error;
