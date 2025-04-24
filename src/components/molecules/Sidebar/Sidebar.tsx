@@ -1,41 +1,43 @@
   "use client";
-  import {
-    Drawer,
-    List,
-    ListItemButton,
-    Divider,
-    Box,
-    Typography,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    TextField,
-    DialogActions } from '@mui/material';
-  import {
-    Menu as MenuIcon,
-    ArrowLeft as ArrowLeftIcon,
-    FileText as DashboardIcon,
-    // Upload as UploadIcon,
-    // Search as SearchIcon,
-    // PanelLeft as CategoryIcon,
-    // User as PersonIcon,
-    // Briefcase as WorkIcon,
-    // MessageCircle as ChatIcon,
-    // Settings as SettingsIcon,
-    Home as HomeIcon
-  } from 'lucide-react';
-  import { useSidebar } from '@/context/SidebarContext';
-  import { useRouter, usePathname } from 'next/navigation';
   import CustomButton from '@/components/atoms/button/CustomButton';
-  import Image from 'next/image';
-  import { useWorkspace } from '@/context/WorkspaceContext';
-  import { useState } from 'react';
-  import { Add, KeyboardArrowDown } from '@mui/icons-material';
-  import { useToast } from '@/lib/hooks/useToast';
+import { useSidebar } from '@/context/SidebarContext';
+import { useWorkspace } from '@/context/WorkspaceContext';
+import { useToast } from '@/lib/hooks/useToast';
+import { Add, KeyboardArrowDown } from '@mui/icons-material';
+// import {MetProAiHomePage} from '@/app/Dashboard/Home/page';
+import {
+  Box,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  Drawer,
+  List,
+  ListItemButton,
+  TextField,
+  Typography
+} from '@mui/material';
+import {
+  ArrowLeft as ArrowLeftIcon,
+  FileText as DashboardIcon,
+  // Upload as UploadIcon,
+  // Search as SearchIcon,
+  // PanelLeft as CategoryIcon,
+  // User as PersonIcon,
+  // Briefcase as WorkIcon,
+  // MessageCircle as ChatIcon,
+  // Settings as SettingsIcon,
+  Home as HomeIcon,
+  Menu as MenuIcon
+} from 'lucide-react';
+import Image from 'next/image';
+import { usePathname, useRouter } from 'next/navigation';
+import { useState } from 'react';
 
   const navItems = [
-    { title: 'Home', icon: <HomeIcon size={18} />, path: '/' }, 
-    { title: 'Dashboard', icon: <DashboardIcon size={18} />, path: '/dashboard' },
+    { title: 'Home', icon: <HomeIcon size={18} />, path: '/Dashboard/Home' }, 
+    { title: 'Dashboard', icon: <DashboardIcon size={18} />, path: '/Dashboard' },
   ];
 
   const Sidebar = () => {
@@ -245,7 +247,7 @@
                     }}
                     onClick={() => {
                       setActiveWorkspace(workspace);
-                      router.push('/dashboard/workspace');
+                      router.push('Workspace/Home');
                     }}
                   >
                     {/* Ensure circle doesn't shrink */}
@@ -311,7 +313,7 @@
                     }}
                     onClick={() => {
                       setActiveWorkspace(workspace);
-                      router.push('/dashboard/workspace');
+                      router.push('/Workspace/Home');
                     }}
                     title={workspace.name} // Add tooltip for collapsed state
                   >

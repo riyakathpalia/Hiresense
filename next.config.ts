@@ -8,6 +8,7 @@ const nextConfig = {
       bodySizeLimit: '100mb', // Increase the body size limit to 100 MB
     },
   },
+  output:'standalone',
 };
 
 module.exports = nextConfig;

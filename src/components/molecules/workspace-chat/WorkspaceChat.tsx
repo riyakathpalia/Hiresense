@@ -21,7 +21,7 @@ import {
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useRef, useState } from 'react';
 import WorkspaceSelector from '../Workspace-Selector/WorkspaceSelector';
-import { ChatResponse, MetProAiAPI } from '@/lib/api/flask-api';
+import { MetProAiAPI } from '@/lib/api/flask-api';
 
 interface MessageType {
     id: string;

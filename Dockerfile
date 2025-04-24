@@ -2,59 +2,62 @@
 FROM node:20-slim AS deps
 WORKDIR /app
 
-# Copy only package.json and package-lock.json to leverage Docker cache
+# Copy configuration files first to leverage Docker cache
 COPY package.json package-lock.json ./
 COPY .env* ./
+COPY tsconfig.json ./  
 
-# Install dependencies including the required platform-specific packages
-RUN npm ci --include=optional
+# Install dependencies including optional dependencies
+RUN npm ci --omit=dev --include=optional
 
-# Stage 2: Build the application
+# Stage 2: Builder
 FROM node:20-slim AS builder
 WORKDIR /app
 
-# Copy the dependencies from the previous stage
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/.env* ./
+COPY --from=deps /app/package*.json ./
+COPY --from=deps /app/tsconfig.json ./
 
-# Copy the rest of the application code
-COPY . .
+# Copy ALL source files with proper case sensitivity
+COPY src ./src
+COPY public ./public
+COPY package*.json ./
+COPY next.config.* ./
+COPY tsconfig.json ./
+COPY .env* ./
 
-# Explicitly install the correct lightningcss binary
-RUN npm install lightningcss@1.21.5
+# Verify copied files
+RUN ls -lR src/components/ && \
+    ls -lR src/utils/ && \
+    ls -lR src/app/
 
-# Set environment variables for Next.js build
-ENV NEXT_TELEMETRY_DISABLED=1
-ENV NODE_ENV=production
-
-
-# Build the Next.js application
-RUN npm run build 
+# Then proceed with build
+RUN npm run build
 
 # Stage 3: Serve the application
 FROM node:20-slim AS runner
 WORKDIR /app
 
-# Copy the built application from the builder stage
-COPY --from=builder /app/package.json ./package.json
-COPY next.config.ts ./
+# Create non-root user for security
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
 
-# If using next.config.ts, compile it to JS
-# RUN if [ -f next.config.ts ]; then \
-#      npx tsc next.config.ts --esModuleInterop --module commonjs; \
-#    fi
-
-# For standalone output (recommended)
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/public ./public
+# Copy necessary files from builder stage
+COPY --from=builder --chown=nextjs:nodejs /app/package.json ./
+COPY --from=builder --chown=nextjs:nodejs /app/next.config.* ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
 # Install only production dependencies
-RUN npm ci --omit=dev --omit=optional --production --include=optional
+RUN npm install --omit=dev --include=optional
 
 # Expose the port the app runs on
-ENV PORT 3001
-EXPOSE 3001
+ENV PORT=3002
+EXPOSE 3002
+
+# Switch to non-root user
+USER nextjs
 
 # Start the Next.js application
 CMD ["npm", "start"]
