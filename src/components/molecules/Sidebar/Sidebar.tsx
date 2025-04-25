@@ -130,7 +130,7 @@ import { useState } from 'react';
 
               {isOpen ? (
                 <Typography variant="h6" color='DodgerBlue.main' sx={{ fontWeight: "bold" }}>
-                  MetProAi
+                  MetProAI
                 </Typography>
               ) : (
                 <Box
@@ -247,7 +247,7 @@ import { useState } from 'react';
                     }}
                     onClick={() => {
                       setActiveWorkspace(workspace);
-                      router.push('Workspace/Home');
+                      router.push('Workspace/Dashboard/Home');
                     }}
                   >
                     {/* Ensure circle doesn't shrink */}
@@ -313,7 +313,7 @@ import { useState } from 'react';
                     }}
                     onClick={() => {
                       setActiveWorkspace(workspace);
-                      router.push('/Workspace/Home');
+                      router.push('/Workspace/Dashboard/Home');
                     }}
                     title={workspace.name} // Add tooltip for collapsed state
                   >
@@ -368,7 +368,7 @@ import { useState } from 'react';
           }}>
             <Image
               src="/Caze MeTPro AI.png" // Path to the image
-              alt="MetProAi Logo"
+              alt="MetProAI Logo"
               width={isOpen ? 150 : 50} // Adjust width based on sidebar state
               height={isOpen ? 150 : 50} // Adjust height based on sidebar state
               priority // Loads image immediately

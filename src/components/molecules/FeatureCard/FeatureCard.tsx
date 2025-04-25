@@ -3,12 +3,14 @@ import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import { styled } from '@mui/material/styles';
+import { SxProps, Theme } from '@mui/material';
 
 interface FeatureCardProps {
   icon: React.ReactNode;
   title: string;
   description: string;
   className?: string;
+  sx?: SxProps<Theme>;
 }
 
 const StyledCard = styled(Card)(({ theme }) => ({
@@ -20,7 +22,7 @@ const StyledCard = styled(Card)(({ theme }) => ({
   },
 }));
 
-const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description, className }) => {
+const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description, className ,sx}) => {
   return (
     <StyledCard className={className} elevation={2} sx={{backgroundColor:""}}>
       <CardContent>

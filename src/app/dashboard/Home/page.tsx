@@ -44,7 +44,7 @@ const MetProAiHomePage = () => {
             >
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                 <Typography variant="h5" component="h1" fontWeight="bold">
-                  MetProAi Home
+                  Home
                 </Typography>
               </Box>
             </Box>

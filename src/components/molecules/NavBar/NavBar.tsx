@@ -1,4 +1,6 @@
+import React from "react";
 import { AppBar, Box, Button, Toolbar, Typography } from "@mui/material";
+import Image from "next/image";
 
 const Navbar = () => {
 
@@ -6,33 +8,33 @@ const Navbar = () => {
     <AppBar
       position="sticky"
       sx={{
-        top: 0,
+        top: 12,
         zIndex: 1000,
         borderBottom: "0.1rem solid",
         borderColor: "divider",
         backgroundColor: "transparent",
         backdropFilter: "blur(10px)",
+        height: '64px'
       }}
     >
-      <Toolbar sx={{ display: "flex", justifyContent: "space-between", mx: { sm: 2, md: 5, lg: 30 } }}>
+      <Toolbar sx={{ display: "flex", justifyContent: "space-between", mx: { sm: 2, md: 5, lg: 8 }, minHeight: '64px !important', // Override default min-height
+          height: '64px',
+          padding: '0 !important' }}>
         {/* Brand Logo */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          {/* <Image
-            src="/Caze-Logo-Colour-Transparent.webp"
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, marginRight:"auto" }}>
+          <Image
+            src="/Caze MeTPro AI.png"
             alt="Logo Image"
-            width={150}
-            height={150}
+            width={170}
+            height={50}
             priority
-          /> */}
-          <Typography variant="h6" fontWeight="bold">
-            MetProAI
-          </Typography>
+          />
         </Box>
 
         {/* Navigation Links */}
         <Box sx={{ display: { xs: "none", md: "flex" }, gap: 3 }}>
           <Button
-            sx={{ textTransform: "none", color: "text.secondary" }}
+            sx={{ textTransform: "none", color: "white", typography: 'h6' }}
             onClick={() => {
               const el = document.getElementById("features");
               if (el) el.scrollIntoView({ behavior: "smooth" });
@@ -42,7 +44,7 @@ const Navbar = () => {
           </Button>
 
           <Button
-            sx={{ textTransform: "none", color: "text.secondary" }}
+            sx={{ textTransform: "none", color: "white", typography: 'h6' }}
             onClick={() => {
               const el = document.getElementById("how-it-works");
               if (el) el.scrollIntoView({ behavior: "smooth" });

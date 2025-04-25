@@ -14,22 +14,22 @@ metProAiApi.interceptors.response.use(
     (response: AxiosResponse) => response,
     (error: AxiosError) => {
         // Log errors for debugging
-        console.error('MetProAi API Error:', error);
+        console.error('CazeMetProAI API Error:', error);
 
         // Handle specific HTTP errors
         if (error.response) {
             const { status } = error.response;
             switch (status) {
                 case 400:
-                    console.error('MetProAi Bad Request:', error.response.data);
+                    console.error('CazeMetProAI Bad Request:', error.response.data);
                     break;
                 default:
-                    console.error(`MetProAi Error with status code ${status}:`, error.response.data);
+                    console.error(`CazeMetProAI Error with status code ${status}:`, error.response.data);
             }
         } else if (error.request) {
-            console.error('MetProAi Network Error: No response received', error.request);
+            console.error('CazeMetProAI Network Error: No response received', error.request);
         } else {
-            console.error('MetProAi Error setting up request:', error.message);
+            console.error('CazeMetProAI Error setting up request:', error.message);
         }
 
         return Promise.reject(error);

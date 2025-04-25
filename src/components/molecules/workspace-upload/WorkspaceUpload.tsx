@@ -169,7 +169,7 @@ const WorkspaceUpload: React.FC<WorkspaceUploadProps> = ({
             }
         
             console.error('File Upload error:', error);
-            enqueueSnackbar(`Failed to upload ${type === 'medicalDocument' ? 'medical' : 'patient'} documents to MetProAi. ${message}`, {
+            enqueueSnackbar(`Failed to upload ${type === 'medicalDocument' ? 'medical' : 'patient'} documents. ${message}`, {
                 variant: 'error',
             });
         } finally {
@@ -190,7 +190,7 @@ const WorkspaceUpload: React.FC<WorkspaceUploadProps> = ({
         }
 
         if (!url.trim()) {
-            enqueueSnackbar(`Please enter a valid URL to upload to MetProAi.`, { variant: 'error' });
+            enqueueSnackbar(`Please enter a valid URL to upload .`, { variant: 'error' });
             return;
         }
 
@@ -222,7 +222,7 @@ const WorkspaceUpload: React.FC<WorkspaceUploadProps> = ({
             const message =
                 error instanceof Error ? error.message : 'An error occurred.';
         
-            enqueueSnackbar(`Failed to upload ${type === 'medicalDocument' ? 'medical' : 'patient'} document from URL to MetProAi. ${message}`, {
+            enqueueSnackbar(`Failed to upload ${type === 'medicalDocument' ? 'medical' : 'patient'} document from URL. ${message}`, {
                 variant: 'error',
             });
         } finally {
@@ -242,7 +242,7 @@ const WorkspaceUpload: React.FC<WorkspaceUploadProps> = ({
             <CardHeader
                 title={
                     <Typography variant="h6" component="div" color="white">
-                        Upload {type === 'medicalDocument' ? 'Medical' : 'Patient'} Documents to MetProAi
+                        Upload {type === 'medicalDocument' ? 'Medical' : 'Patient'} Documents
                     </Typography>
                 }
                 sx={{ py: 1.5, textAlign: 'center' }}
@@ -288,7 +288,7 @@ const WorkspaceUpload: React.FC<WorkspaceUploadProps> = ({
                 {files.length > 0 && (
                     <Box mt={2}>
                         <Typography variant="subtitle2" gutterBottom>
-                            Selected Files for MetProAi ({files.length})
+                            Selected Files  ({files.length})
                         </Typography>
                         <List
                             dense
@@ -330,7 +330,7 @@ const WorkspaceUpload: React.FC<WorkspaceUploadProps> = ({
                 )}
 
                 <Typography variant="subtitle1" gutterBottom mt={3} color="textSecondary">
-                    Upload from URL to MetProAi
+                    Upload from URL 
                 </Typography>
                 <TextField
                     fullWidth
@@ -392,7 +392,7 @@ const WorkspaceUpload: React.FC<WorkspaceUploadProps> = ({
                         startIcon={!uploading && <UploadIcon size={16} />}
                         size="small"
                     >
-                        {uploading ? `Uploading to MetProAi...` : `Upload Files`}
+                        {uploading ? `Uploading  ...` : `Upload Files`}
                     </CustomButton>
                     <CustomButton
                         variant="primary"
@@ -402,7 +402,7 @@ const WorkspaceUpload: React.FC<WorkspaceUploadProps> = ({
                         startIcon={!isUploadingUrl && <LinkIcon size={16} />}
                         size="small"
                     >
-                        {isUploadingUrl ? `Uploading from URL to MetProAi...` : `Upload from URL`}
+                        {isUploadingUrl ? `Uploading from URL ...` : `Upload from URL`}
                     </CustomButton>
                 </Box>
             </CardFooter>

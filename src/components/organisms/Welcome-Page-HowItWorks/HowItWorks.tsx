@@ -9,7 +9,7 @@ const HowItWorks = () => {
 
   const steps = [
     { number: "1", title: "Upload Patient Data", description: "Upload medical reports, prescriptions, lab results, or connect your EMR system." },
-    { number: "2", title: "Generate Case Summary", description: "MetProAi automatically summarizes medical history and key clinical notes." },
+    { number: "2", title: "Generate Case Summary", description: "CazeMetProAI automatically summarizes medical history and key clinical notes." },
     { number: "3", title: "Ask Medical Queries", description: "Interact with the AI assistant for insights, explanations, or treatment suggestions." },
     { number: "4", title: "Track & Manage Sessions", description: "Review saved chats, manage patient cases, and maintain your medical workflow." },
   ];
@@ -18,7 +18,7 @@ const HowItWorks = () => {
     <Box id="how-it-works" sx={{ py: 8, px: { xs: 2, md: 4 } }}>
       <Container maxWidth="md">
         <Typography variant="h4" fontWeight="bold" textAlign="center" mb={4}>
-          How MetProAi Works
+          How CazeMetProAI Works
         </Typography>
         <Box sx={{ maxWidth: 600, mx: 'auto', position: 'relative' }}>
           <Box sx={{ ml: 4, borderLeft: 2, borderColor: 'DodgerBlue.main', pl: 4, py: 2 }}>

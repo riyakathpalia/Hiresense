@@ -41,18 +41,18 @@ const HeroSection: React.FC = () => {
               Upload medical documents, analyze patient data with AI, and get intelligent clinical insights to support your diagnostic workflow.
             </Typography>
             <Box sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" }, gap: 2, mt: 3 }}>
-              <CustomButton 
-                variant="primary" 
-                color="primary" 
+              <CustomButton
+                variant="primary"
+                color="primary"
                 size="large" 
-                onClick={() => router.push("/upload")} 
+                onClick={() => router.push("/upload")}
                 endIcon={<ChevronRight />}
               >
                 Upload Files
               </CustomButton>
-              <CustomButton 
-                variant="outline" 
-                size="large" 
+              <CustomButton
+                variant="outline"
+                size="large"
                 onClick={() => router.push("/Dashboard")}
               >
                 View Dashboard

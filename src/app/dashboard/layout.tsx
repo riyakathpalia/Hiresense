@@ -12,7 +12,7 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
           <SidebarProvider>
             {/* Sidebar remains static */}
             <Sidebar />
-            {/* Main content area for MetProAi */}
+            {/* Main content area for MetProAI */}
             <main className="flex-1 overflow-auto m-0 p-0">
               {children}
             </main>

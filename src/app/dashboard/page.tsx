@@ -6,7 +6,7 @@ const DashboardContent = () => {
   return (
     <Container maxWidth="md" sx={{ mt: 4 }}>
       <Typography variant="h4" gutterBottom>
-        Welcome to MetProAi
+        Welcome to MetProAI
       </Typography>
       <Typography variant="subtitle1" color="textSecondary" gutterBottom>
         Your AI assistant for medical analysis and conversation

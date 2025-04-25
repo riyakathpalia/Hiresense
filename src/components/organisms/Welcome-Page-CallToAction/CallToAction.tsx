@@ -22,7 +22,7 @@ const CallToAction = () => {
           Ready to Revolutionize Your Clinical Workflow?
         </Typography>
         <Typography variant="h6" sx={{ opacity: 0.9, mb: 4 }}>
-          Let MetProAi assist you in managing medical data, analyzing reports, and providing fast, intelligent insights.
+          Let MetProAI assist you in managing medical data, analyzing reports, and providing fast, intelligent insights.
         </Typography>
         <CustomButton
           variant="primary"

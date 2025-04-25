@@ -44,16 +44,28 @@ export const WelcomePageFeatures = () => {
     >
       <Container>
         <Typography variant="h4" align="center" fontWeight="bold" gutterBottom>
-          Key Features of MetProAi
+          Key Features of CazeMetProAI
         </Typography>
         <Grid container spacing={4}>
           {features.map((feature, index) => (
             <Grid item xs={12} sm={6} md={3} key={index}>
-              <FeatureCard
-                icon={feature.icon}
-                title={feature.title}
-                description={feature.description}
-              />
+              
+              <Box sx={{ 
+                height: '100%', // Ensure full height
+                display: 'flex', // Enable flex layout
+              }}>
+                <FeatureCard
+                  icon={feature.icon}
+                  title={feature.title}
+                  description={feature.description}
+                  sx={{
+                    flex: 1, // Take up all available space
+                    display: 'flex',
+                    flexDirection: 'column',
+                    height: '100%', // Full height of parent
+                  }}
+                />
+              </Box>
             </Grid>
           ))}
         </Grid>
