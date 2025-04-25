@@ -95,6 +95,9 @@ export async function POST(req: NextRequest) {
       const uniqueFilename = `${uuidv4()}${fileExtension}`;
       const fullPath = path.join(MEDICAL_DOC, uniqueFilename);
 
+      // const originalName = (file as File).name;
+      // const fullPath = path.join(MEDICAL_DOC, originalName);
+
       // Save the file
       const buffer = Buffer.from(await file.arrayBuffer());
       await writeFile(fullPath, buffer);

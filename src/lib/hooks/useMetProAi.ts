@@ -78,10 +78,11 @@ export const useMetProAi = () => {
     const deleteMedicalDocument = useCallback(async (fileName: string) => {
         setMedicalDocumentsLoading(true);
         setMedicalDocumentsError(null);
+        console.log('Attempting to delete medical file:', fileName)
         try {
-            const response = await MetProAiAPI.deleteMedicalFile(fileName); // Corrected to deleteMedicalFile
+            const response = await MetProAiAPI.deleteMedicalDocument(fileName); // Corrected to deleteMedicalFile
             // Remove the deleted item from the state
-            setMedicalDocumentsData(prev => prev.filter(item => item.name !== fileName));
+            setMedicalDocumentsData(prev => prev.filter(item => item.originalname  !== fileName));
             return response;
         } catch (err: unknown) {
             if (axios.isAxiosError(err)) {
@@ -96,12 +97,11 @@ export const useMetProAi = () => {
     }, []);
 
     // Corrected extractMedicalPdf
-    const extractMedicalPdf = useCallback(async (urls: string | string[]) => {
+    const extractMedicalPdf = useCallback(async (url: string, workspaceName: string) => {
         setMedicalDocumentsLoading(true);
         setMedicalDocumentsError(null);
         try {
-            const response = await MetProAiAPI.extractMedicalPDF(urls);
-            return response;
+            return await MetProAiAPI.extractMedicalPDF(url, workspaceName);
         } catch (err: unknown) {
             if (axios.isAxiosError(err)) {
                 setMedicalDocumentsError(err.response?.data?.error || 'Failed to extract medical PDF');
@@ -179,7 +179,7 @@ export const useMetProAi = () => {
         setPatientDocumentsLoading(true);
         setPatientDocumentsError(null);
         try {
-            const response = await MetProAiAPI.deletePatientFile(fileName);  // Corrected to deletePatientFile
+            const response = await MetProAiAPI.deletePatientDocument(fileName);  // Corrected to deletePatientFile
             setPatientDocumentsData(prev => prev.filter(item => item.name !== fileName));
             return response;
         } catch (err: unknown) {
@@ -195,12 +195,11 @@ export const useMetProAi = () => {
     }, []);
 
     // Corrected extractPatientPdf
-    const extractPatientPdf = useCallback(async (urls: string | string[]) => {
+    const extractPatientPdf = useCallback(async (url: string, workspaceName: string) => {
         setPatientDocumentsLoading(true);
         setPatientDocumentsError(null);
         try {
-            const response = await MetProAiAPI.extractPatientPDF(urls);
-            return response;
+            return await MetProAiAPI.extractPatientPDF(url);
         } catch (err: unknown) {
             if (axios.isAxiosError(err)) {
                 setPatientDocumentsError(err.response?.data?.error || 'Failed to extract patient PDF');

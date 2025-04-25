@@ -16,7 +16,7 @@ interface UploadResponse {
     files: UploadFile[];
 }
 
-interface ExtractPDFResponse { // Define a type for the response from /extract/pdf
+interface ExtractPDFResponse extends UploadResponse { // Define a type for the response from /extract/pdf
     message: string;
     filename: string; // Or whatever properties the actual response has
 }
@@ -107,22 +107,30 @@ export const MetProAiNextAPI = {
             throw handleApiError(error, 'Error uploading patient documents');
         }
     },
-    extractPdf: async (url: string, type: 'medical' | 'patient'): Promise<ExtractPDFResponse> => {
+    // Update the extractPdf method to handle workspace
+    extractPdf: async (
+        url: string,
+        type: 'medical' | 'patient',
+        workspaceName: string
+    ): Promise<ExtractPDFResponse> => {
         console.log(`Extracting PDF from URL (${type}):`, url);
         try {
-            const response = await nextMetProAiApi.post<ExtractPDFResponse>(`/extract/pdf?url=${encodeURIComponent(url)}&type=${type}`);
+            const response = await nextMetProAiApi.post<ExtractPDFResponse>(
+                `/extract/pdf`,
+                { url, type, workspaceName }
+            );
             return response.data;
         } catch (error) {
             throw handleApiError(error, `Error extracting PDF from URL (${type})`);
         }
     },
 
-    extractMedicalPDF: async (url: string): Promise<ExtractPDFResponse> => {
-        return MetProAiNextAPI.extractPdf(url, 'medical');
+    extractMedicalPDF: async (url: string, workspaceName: string): Promise<ExtractPDFResponse> => {
+        return MetProAiNextAPI.extractPdf(url, 'medical', workspaceName);
     },
 
-    extractPatientPDF: async (url: string): Promise<ExtractPDFResponse> => {
-        return MetProAiNextAPI.extractPdf(url, 'patient');
+    extractPatientPDF: async (url: string, workspaceName: string): Promise<ExtractPDFResponse> => {
+        return MetProAiNextAPI.extractPdf(url, 'patient', workspaceName);
     },
 
     getWorkspaces: async (): Promise<Workspace[]> => {

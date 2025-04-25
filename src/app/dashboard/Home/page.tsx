@@ -58,7 +58,6 @@ const MetProAiHomePage = () => {
             >
               <Box sx={{
                 display: 'flex',
-                gap: 2, // Add some gap
                 width: '100%'
               }}>
                 <WorkspaceUpload

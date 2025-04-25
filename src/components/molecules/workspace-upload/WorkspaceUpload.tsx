@@ -2,6 +2,7 @@
 
 import { useWorkspace } from '@/context/WorkspaceContext';
 import useMetProAi from '@/lib/hooks/useMetProAi';
+
 import {
     Box,
     Button,
@@ -15,6 +16,7 @@ import {
     ListItemText,
     TextField,
     Typography,
+    styled,
 } from '@mui/material';
 import {
     FileText,
@@ -26,6 +28,19 @@ import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
 import CustomButton from '../../atoms/button/CustomButton';
 import { CardFooter } from '../Card/Card';
+
+const StyledDropZone = styled('div')(({ theme }) => ({
+    border: '2px dashed',
+    borderColor: theme.palette.divider,
+    borderRadius: theme.shape.borderRadius,
+    padding: theme.spacing(2),
+    textAlign: 'center',
+    cursor: 'pointer',
+    '&:hover': {
+        backgroundColor: theme.palette.action.hover
+    },
+    transition: theme.transitions.create(['background-color', 'border-color'])
+}));
 
 type UploadType = 'medicalDocument' | 'patientDocument';
 
@@ -65,6 +80,7 @@ const WorkspaceUpload: React.FC<WorkspaceUploadProps> = ({
     const [dragActive, setDragActive] = useState(false);
     const { uploadMedicalDocuments, uploadPatientDocuments } = useMetProAi();
     const [uploadedFiles, setUploadedFiles] = useState<UploadFileResponse[]>([]); // State for uploaded files
+    const { deleteMedicalDocument, deletePatientDocument } = useMetProAi();
 
 
     // Load uploaded files from localStorage on component mount
@@ -167,7 +183,7 @@ const WorkspaceUpload: React.FC<WorkspaceUploadProps> = ({
             if (error instanceof Error) {
                 message = error.message;
             }
-        
+
             console.error('File Upload error:', error);
             enqueueSnackbar(`Failed to upload ${type === 'medicalDocument' ? 'medical' : 'patient'} documents. ${message}`, {
                 variant: 'error',
@@ -175,13 +191,18 @@ const WorkspaceUpload: React.FC<WorkspaceUploadProps> = ({
         } finally {
             setUploading(false);
         }
-        
+
     };
 
 
     const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setUrl(e.target.value);
     };
+
+    const {
+        extractMedicalPdf,
+        extractPatientPdf,
+    } = useMetProAi();
 
     const handleUrlUpload = async () => {
         if (!activeWorkspace?.name) {
@@ -190,46 +211,34 @@ const WorkspaceUpload: React.FC<WorkspaceUploadProps> = ({
         }
 
         if (!url.trim()) {
-            enqueueSnackbar(`Please enter a valid URL to upload .`, { variant: 'error' });
+            enqueueSnackbar('Please enter a valid URL to upload.', { variant: 'error' });
             return;
         }
 
         setIsUploadingUrl(true);
         try {
-            // const apiResponse = await (type === 'medicalDocument'
-            //     ? medicalDocuments.extractPdf(`${url}?workspace=${activeWorkspace.name}`)
-            //     : patientDocuments.extractPdf(`${url}?workspace=${activeWorkspace.name}`));
+            let response;
+            if (type === 'medicalDocument') {
+                response = await extractMedicalPdf(url, activeWorkspace.name);
+            } else {
+                response = await extractPatientPdf(url, activeWorkspace.name);
+            }
 
-            //   const response: UploadResponse = {
-            //     message: apiResponse.message || 'File from URL uploaded successfully',
-            //     processedFiles: apiResponse.processedFiles || 0,
-            //     files: apiResponse.files.map((file: any) => ({
-            //         originalname: file.originalname,
-            //         savedAs: file.savedAs,
-            //         size: file.size,
-            //         type: file.type,
-            //         url: file.url,
-            //     })),
-            // };
+            enqueueSnackbar('File from URL uploaded successfully', {
+                variant: 'success',
+            });
 
-            // console.log(`${type} URL Upload response:`, response);
-
-
-            // setUrl('');
+            setUrl('');
+            // Optionally: Refresh file list if needed
         } catch (error: unknown) {
             console.error('URL Upload error:', error);
-        
-            const message =
-                error instanceof Error ? error.message : 'An error occurred.';
-        
-            enqueueSnackbar(`Failed to upload ${type === 'medicalDocument' ? 'medical' : 'patient'} document from URL. ${message}`, {
-                variant: 'error',
-            });
+            const message = error instanceof Error ? error.message : 'An error occurred.';
+            enqueueSnackbar(`Failed to upload from URL. ${message}`, { variant: 'error' });
         } finally {
             setIsUploadingUrl(false);
         }
-        
     };
+
 
     const getDragDropText = () => {
         return type === 'medicalDocument'
@@ -237,8 +246,35 @@ const WorkspaceUpload: React.FC<WorkspaceUploadProps> = ({
             : 'Drag and drop patient files here or click to browse';
     };
 
+
+
+    const handleDeleteUploadedFile = async (fileName: string) => {
+        try {
+            if (type === 'medicalDocument') {
+                await deleteMedicalDocument(fileName);
+            } else {
+                await deletePatientDocument(fileName);
+            }
+
+            // Remove from local state
+            setUploadedFiles(prev => prev.filter(f => f.originalname !== fileName));
+
+            // Update localStorage
+            if (activeWorkspace?.name) {
+                const savedFilesKey = `uploadedFiles_${activeWorkspace.name}_${type}`;
+                const updatedFiles = uploadedFiles.filter(f => f.originalname !== fileName);
+                localStorage.setItem(savedFilesKey, JSON.stringify(updatedFiles));
+            }
+
+            enqueueSnackbar('File deleted successfully', { variant: 'success' });
+        } catch (error) {
+            enqueueSnackbar('Failed to delete file', { variant: 'error' });
+            console.error('Delete error:', error);
+        }
+    };
+
     return (
-        <Card sx={{ width: '100%' }}>
+        <Card sx={{ width: '100%', border: 1, borderColor: 'divider' }}>
             <CardHeader
                 title={
                     <Typography variant="h6" component="div" color="white">
@@ -251,23 +287,14 @@ const WorkspaceUpload: React.FC<WorkspaceUploadProps> = ({
                 <Typography variant="subtitle1" gutterBottom color="textSecondary">
                     Upload Files
                 </Typography>
-                <Box
-                    border={1}
-                    borderColor="divider"
-                    borderRadius="md"
-                    padding={2}
-                    textAlign="center"
+                <StyledDropZone
                     onDragOver={handleDragOver}
                     onDrop={handleDrop}
                     onDragLeave={handleDragLeave}
                     onClick={() => document.getElementById(`workspace-input-${type}`)?.click()}
                     sx={{
-                        cursor: 'pointer',
                         backgroundColor: dragActive ? 'action.selected' : 'transparent',
-                        transition: 'background-color 0.2s ease-in-out',
-                        '&:hover': {
-                            backgroundColor: 'action.hover',
-                        },
+                        borderColor: dragActive ? 'primary.main' : 'divider',
                     }}
                     aria-label="File upload area"
                 >
@@ -283,7 +310,7 @@ const WorkspaceUpload: React.FC<WorkspaceUploadProps> = ({
                     <Typography variant="body2" color="textSecondary" mt={1}>
                         {getDragDropText()}
                     </Typography>
-                </Box>
+                </StyledDropZone>
 
                 {files.length > 0 && (
                     <Box mt={2}>
@@ -303,16 +330,19 @@ const WorkspaceUpload: React.FC<WorkspaceUploadProps> = ({
                                 <ListItem
                                     key={index}
                                     secondaryAction={
-                                        <IconButton
-                                            edge="end"
-                                            aria-label="Remove file"
+                                        <Button
+                                            variant="outlined"
+                                            size="small"
+                                            color="error"
+                                            startIcon={<X size={16} />}
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 removeFile(index);
                                             }}
+                                            sx={{ ml: 1 }}
                                         >
-                                            <X size={16} />
-                                        </IconButton>
+                                            Delete
+                                        </Button>
                                     }
                                     sx={{ py: 0.5 }}
                                 >
@@ -330,7 +360,7 @@ const WorkspaceUpload: React.FC<WorkspaceUploadProps> = ({
                 )}
 
                 <Typography variant="subtitle1" gutterBottom mt={3} color="textSecondary">
-                    Upload from URL 
+                    Upload from URL
                 </Typography>
                 <TextField
                     fullWidth
@@ -358,16 +388,28 @@ const WorkspaceUpload: React.FC<WorkspaceUploadProps> = ({
                                             secondary={`${(file.size / 1024).toFixed(2)} KB, ${file.type}`}
                                         />
                                     </Box>
-                                    <a
-                                        href={file.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        style={{ textDecoration: 'none' }}
-                                    >
-                                        <Button variant="outlined" size="small">
-                                            View <LinkIcon size={16} />
+                                    <Box display="flex" gap={1}>
+                                        <Button
+                                            variant="outlined"
+                                            size="small"
+                                            color="error"
+                                            startIcon={<X size={16} />}
+                                            onClick={() => handleDeleteUploadedFile(file.originalname)}
+                                            sx={{ ml: 1 }}
+                                        >
+                                            Delete
                                         </Button>
-                                    </a>
+                                        <Button
+                                            variant="outlined"
+                                            size="small"
+                                            component="a"
+                                            href={file.url}
+                                            target="_blank"
+                                            startIcon={<LinkIcon size={16} />}
+                                        >
+                                            View
+                                        </Button>
+                                    </Box>
                                 </ListItem>
                             ))}
                         </List>
@@ -411,4 +453,3 @@ const WorkspaceUpload: React.FC<WorkspaceUploadProps> = ({
 };
 
 export default WorkspaceUpload;
-

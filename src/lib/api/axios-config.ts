@@ -93,21 +93,27 @@ export const MetProAiAPI = {
     },
 
     // Delete Medical File
-    deleteMedicalFile: async (fileName: string): Promise<ApiResponse> => {
+    deleteMedicalDocument: async (fileName: string): Promise<ApiResponse> => {
+        console.log('Attempting to delete medical file:', fileName);
         try {
-            const response = await metProAiApi.delete(`/delete/medical_file/${fileName}`);
+            const encodedFileName = encodeURIComponent(fileName);
+            const response = await metProAiApi.delete(`/delete/medical_documents/${encodedFileName}`);
+            console.log('Delete successful:', response.data);
             return response.data;
         } catch (error) {
+            console.error('Delete failed:', error);
             throw handleApiError(error, 'Error deleting medical file');
         }
     },
-
     // Delete Patient File
-    deletePatientFile: async (fileName: string): Promise<ApiResponse> => {
+    deletePatientDocument: async (fileName: string): Promise<ApiResponse> => {
         try {
-            const response = await metProAiApi.delete(`/delete/patient_file/${fileName}`);
+            const encodedFileName = encodeURIComponent(fileName);
+            const response = await metProAiApi.delete(`/delete/patient_documents/${encodedFileName}`);
+            console.log('Delete successful:', response.data);
             return response.data;
         } catch (error) {
+            console.error('Delete failed:', error);
             throw handleApiError(error, 'Error deleting patient file');
         }
     },

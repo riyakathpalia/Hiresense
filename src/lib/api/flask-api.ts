@@ -93,6 +93,7 @@ export const MetProAiAPI = {
 
     // List Patient Documents - Requires implementation in Flask and OpenAPI
     listPatientDocuments: async (): Promise<ListDocumentsResponse> => {
+        
         try {
             const response: AxiosResponse<ListDocumentsResponse> = await metProAiApi.get('/list/patient_documents'); // endpoint. You might need to create this.
             return response.data;
@@ -102,9 +103,10 @@ export const MetProAiAPI = {
     },
 
     // Delete Medical Document
-    deleteMedicalFile: async (fileName: string): Promise<ApiResponse> => { // Changed parameter name to fileName
+    deleteMedicalDocument: async (fileName: string): Promise<ApiResponse> => { // Changed parameter name to fileName
         try {
-            const response: AxiosResponse<ApiResponse> = await metProAiApi.delete(`/delete/medical_file/${fileName}`); // endpoint
+            const encodedFileName = encodeURIComponent(fileName);
+            const response: AxiosResponse<ApiResponse> = await metProAiApi.delete(`/delete/medical_documents/${encodedFileName}`); // endpoint
             return response.data;
         } catch (error) {
             throw handleApiError(error, 'Error deleting medical document');
@@ -112,9 +114,9 @@ export const MetProAiAPI = {
     },
 
     // Delete Patient Document
-    deletePatientFile: async (fileName: string): Promise<ApiResponse> => {    // Changed parameter name to fileName
+    deletePatientDocument: async (fileName: string): Promise<ApiResponse> => {    // Changed parameter name to fileName
         try {
-            const response: AxiosResponse<ApiResponse> = await metProAiApi.delete(`/delete/patient_file/${fileName}`); // endpoint
+            const response: AxiosResponse<ApiResponse> = await metProAiApi.delete(`/delete/patient_documents/${fileName}`); // endpoint
             return response.data;
         } catch (error) {
             throw handleApiError(error, 'Error deleting patient document');
@@ -122,9 +124,14 @@ export const MetProAiAPI = {
     },
 
     // Extract and Save Medical PDF
-    extractMedicalPDF: async (urls: string | string[]): Promise<SummaryResponse> => {
+    
+    extractMedicalPDF: async (urls: string | string[], workspaceName: string): Promise<SummaryResponse> => {
         try {
-            const response: AxiosResponse<SummaryResponse> = await metProAiApi.post('/extract/save_pdf_medical', { urls }); // endpoint
+            const response: AxiosResponse<SummaryResponse> = await metProAiApi.post('/extract/save_pdf_medical', { 
+                urls,
+                save_path: 'uploads/medical_documents', // Explicitly specify save path
+                workspace_name: workspaceName // Include workspace name if needed
+            });
             return response.data;
         } catch (error) {
             throw handleApiError(error, 'Error extracting medical PDF');
@@ -132,9 +139,13 @@ export const MetProAiAPI = {
     },
 
     // Extract and Save Patient PDF
-    extractPatientPDF: async (urls: string | string[]): Promise<SummaryResponse> => {
+    extractPatientPDF: async (urls: string | string[], workspaceName: string): Promise<SummaryResponse> => {
         try {
-            const response: AxiosResponse<SummaryResponse> = await metProAiApi.post('/extract/save_pdf_patient', { urls }); // endpoint
+            const response: AxiosResponse<SummaryResponse> = await metProAiApi.post('/extract/save_pdf_patient', { 
+                urls,
+                save_path: 'uploads/patient_documents', // Explicitly specify save path
+                workspace_name: workspaceName // Include workspace name if needed
+            });
             return response.data;
         } catch (error) {
             throw handleApiError(error, 'Error extracting patient PDF');

@@ -1,6 +1,7 @@
 import CustomButton from '@/components/atoms/button/CustomButton';
 import { useWorkspace } from '@/context/WorkspaceContext';
 //import { ChatApi } from '@/lib/api/chatApi';
+import { MetProAiAPI } from '@/lib/api/flask-api';
 import { Close, History, Message, Send } from '@mui/icons-material';
 import {
     Box,
@@ -21,7 +22,6 @@ import {
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useRef, useState } from 'react';
 import WorkspaceSelector from '../Workspace-Selector/WorkspaceSelector';
-import { MetProAiAPI } from '@/lib/api/flask-api';
 
 interface MessageType {
     id: string;
