@@ -1,0 +1,29 @@
+.markdown-container {
+    width: 100%;
+  }
+  
+  .markdown-container p {
+    margin: 8px 0;
+  }
+  
+  .markdown-container ul, 
+  .markdown-container ol {
+    padding-left: 24px;
+    margin: 8px 0;
+  }
+  
+  .markdown-container li {
+    margin: 4px 0;
+  }
+  
+  .markdown-container h1 {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin: 16px 0 8px;
+  }
+  
+  .markdown-container h2 {
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin: 16px 0 8px;
+  }
