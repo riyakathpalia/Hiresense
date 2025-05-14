@@ -5,9 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start -p 3002",
+    "start": "next start",
     "lint": "next lint",
-    "storybook": "storybook dev -p 6006",
+    "storybook": "storybook dev",
     "build-storybook": "storybook build",
     "test": "jest",
     "test:watch": "jest --watch"

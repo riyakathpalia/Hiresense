@@ -39,6 +39,8 @@ const MetProAiHomePage = () => {
         value={activeTab}
         onChange={handleTabChange}
         orientation="horizontal"
+        textColor="inherit"
+        indicatorColor="secondary"
         sx={{
           display: 'flex',
           gap: 2,
@@ -53,7 +55,7 @@ const MetProAiHomePage = () => {
             boxShadow: 'none',
             border: 'none',
             marginRight: '8px',
-            color:'white',
+            color: 'white',
           },
           '& .Mui-selected': {
             color: 'white',

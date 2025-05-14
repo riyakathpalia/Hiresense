@@ -156,6 +156,7 @@ export const handleUrlInputChange = async (
   callback: (urls: string, workspaceName: string) => Promise<unknown>, 
   workspaceName: string
 ) => {
+  if (!urls?.trim()) return;
   //if (!urls || (Array.isArray(urls) && urls.length === 0)) return;
   
   //console.log('URLs to process:', Array.isArray(urls) ? urls.length : 1);
@@ -167,7 +168,12 @@ export const handleUrlInputChange = async (
   //console.log(urlsArray);
   
   // Call the upload function
-  const response = await callback(urls, workspaceName);
-  console.log('Response from URL upload: (handleUrlInputChange)', response);
-  return response;
+  try {
+    const response = await callback(urls, workspaceName);
+    console.log('Response from URL upload: (handleUrlInputChange)', response);
+    return response;
+  } catch (error) {
+    console.error('Error during URL upload:', error);
+    throw error;
+  }
 };

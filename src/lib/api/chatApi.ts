@@ -1,47 +1,40 @@
 import axios, { AxiosResponse } from 'axios';
 
-// Create an instance of axios with proper base URL
-const API = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL, // Match Swagger server URL
-  timeout: 10000, // Recommended to add timeout
-});
+// Strict type for request body
+interface ChatRequest {
+  message: string;
+}
 
-// Define response type to match Swagger
-interface ChatApiResponse {
+// Precise response type matching Swagger
+interface ChatResponse {
   reply: string;
 }
 
+const API = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  timeout: 10000,
+});
+
 export const ChatApi = {
   /**
-   * Send a message to the AI (matches Swagger specification)
-   * @param {string} message - User message to send to AI
-   * @returns {Promise<ChatApiResponse>} - API response with AI reply
+   * Send a message to the AI copilot
+   * @param {string} message - User's message to the AI
+   * @returns {Promise<string>} AI's reply
+   * @throws {Error} If message is empty or API call fails
    */
-  sendMessage: (message: string): Promise<AxiosResponse<ChatApiResponse>> => {
-    return API.post<ChatApiResponse>('/chat', { message });
+  sendMessage: async (message: string): Promise<string> => {
+    if (!message || message.trim() === '') {
+      throw new Error('Message cannot be empty');
+    }
+
+    try {
+      const response = await API.post<ChatResponse>('/chat', { message });
+      return response.data.reply;
+    } catch (error) {
+      console.error('Chat API Error:', error);
+      throw error;
+    }
   },
-  
-  /**
-   * Send a keyword-based search to the AI
-   * @param {string} keyword - Keyword to search for
-   * @returns {Promise<ChatApiResponse>} - API response with matched results
-   */
-  sendKeywordChat: (keyword: string): Promise<AxiosResponse<ChatApiResponse>> => {
-    return API.post<ChatApiResponse>('/chat', { 
-      message: `Search for keyword: ${keyword}` 
-    });
-  },
-  
-  /**
-   * Send a treatment-related query (example of domain-specific chat)
-   * @param {string} condition - Medical condition to inquire about
-   * @returns {Promise<ChatApiResponse>} - API response with treatment info
-   */
-  askAboutTreatment: (condition: string): Promise<AxiosResponse<ChatApiResponse>> => {
-    return API.post<ChatApiResponse>('/chat', {
-      message: `What is the treatment for ${condition}?`
-    });
-  }
 };
 
 export default ChatApi;

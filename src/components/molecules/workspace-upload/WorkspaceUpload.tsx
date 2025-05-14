@@ -70,7 +70,7 @@ const WorkspaceUpload: React.FC<WorkspaceUploadProps> = ({ type, onSuccess }) =>
     const [files, setFiles] = useState<File[]>([]); // Scoped to each instance
     const [uploading, setUploading] = useState(false);
     const [isURLMode, setIsURLMode] = useState(false); // Toggle between file and URL mode
-    const [urls, setUrls] = useState<string>();
+    const [urls, setUrls] = useState('');
     const [newURL, setNewURL] = useState('');
     const { setUploadResponse } = useFileUpload();
 
@@ -286,7 +286,7 @@ const WorkspaceUpload: React.FC<WorkspaceUploadProps> = ({ type, onSuccess }) =>
                                 variant="outline"
                                 size="small"
                                 onClick={addURL}
-                                sx={{ ml: 1 }}
+                                sx={{ ml: 1 , width: '100px' }}
                             >
                                 Add URL
                             </CustomButton>

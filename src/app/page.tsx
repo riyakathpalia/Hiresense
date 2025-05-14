@@ -6,11 +6,11 @@ import { useEffect } from "react";
 
 
 export default function WelcomePage() {
-   useEffect(() => {
-      ensureGuestId();
-    }, []); 
+  useEffect(() => {
+    ensureGuestId();
+  }, []);
   return (<>
-    <WelcomePageTemplate/>
+    <WelcomePageTemplate />
   </>
   );
 }

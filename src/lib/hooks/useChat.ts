@@ -1,52 +1,60 @@
-// src/hooks/useChat.ts
 import { useState, useCallback } from 'react';
 import { ChatApi } from '@/lib/api/chatApi';
 
-interface Message {
+// More descriptive interface naming
+interface ChatMessage {
   id: string;
-  ChatResponse: string;
+  content: string;
   isUser: boolean;
   timestamp: Date;
 }
 
-interface UseChat {
-  messages: Message[];
+interface UseChatHook {
+  messages: ChatMessage[];
   loading: boolean;
-  sendMessage: (message: string) => Promise<Message | null>;
+  sendMessage: (message: string) => Promise<ChatMessage | null>;
   clearMessages: () => void;
+}
+
+interface ChatApiResponse {
+  reply: string;
 }
 
 /**
  * Custom hook for managing chat conversations
- * @returns {UseChat} Chat methods and state
+ * @returns {UseChatHook} Chat methods and state
  */
-export const useChat = (): UseChat => {
-  const [messages, setMessages] = useState<Message[]>([]);
+export const useChat = (): UseChatHook => {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Helper function to create a unique ID
-  const createId = () => Date.now().toString();
+  // More robust ID generation
+  const createId = () => `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-  const sendMessage = useCallback(async (message: string): Promise<Message | null> => {
-    if (!message.trim()) return null;
+  const sendMessage = useCallback(async (message: string): Promise<ChatMessage | null> => {
+    // Trim and validate message
+    const trimmedMessage = message.trim();
+    if (!trimmedMessage) return null;
 
     // Add user message
-    const userMessage: Message = {
+    const userMessage: ChatMessage = {
       id: createId(),
-      ChatResponse: message,
-      isUser: true,
+      content: trimmedMessage,
+      isUser: true, 
       timestamp: new Date(),
     };
 
     setMessages(prev => [...prev, userMessage]);
-    setLoading(true);
+    const loadingTimer = setTimeout(() => setLoading(true), 300);
 
     try {
-      const response = await ChatApi.sendMessage(message);
+      // Updated to match the previous ChatApi implementation
+      const responseString = await ChatApi.sendMessage(trimmedMessage);
+      const response: ChatApiResponse = JSON.parse(responseString);
 
-      const aiMessage: Message = {
+      const aiMessage: ChatMessage = {
         id: createId(),
-        ChatResponse: response.data.reply,
+        content: response.reply, // Directly use the response string
         isUser: false,
         timestamp: new Date(),
       };
@@ -54,11 +62,11 @@ export const useChat = (): UseChat => {
       setMessages(prev => [...prev, aiMessage]);
       return aiMessage;
     } catch (err) {
-      console.error('Chat API Error:', err); // Optional: for debugging
+      console.error('Chat API Error:', err);
 
-      const errorMessage: Message = {
+      const errorMessage: ChatMessage = {
         id: createId(),
-        ChatResponse: 'Sorry, I encountered an error processing your request. Please try again.',
+        content: 'Sorry, I encountered an error processing your request. Please try again.',
         isUser: false,
         timestamp: new Date(),
       };
@@ -66,6 +74,7 @@ export const useChat = (): UseChat => {
       setMessages(prev => [...prev, errorMessage]);
       return null;
     } finally {
+      clearTimeout(loadingTimer);
       setLoading(false);
     }
   }, []);

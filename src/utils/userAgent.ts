@@ -5,7 +5,7 @@ export function ensureGuestId() {
   let guestId = Cookies.get('guestId');
 
   if (!guestId) {
-    guestId = uuidv4();
+    guestId = uuidv4().replace(/-/g, '');
     Cookies.set('guestId', guestId, {
       expires: 30, // Expires in 30 days
       path: '/',

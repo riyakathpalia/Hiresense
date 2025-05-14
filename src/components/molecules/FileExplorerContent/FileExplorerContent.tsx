@@ -11,11 +11,12 @@ import { ScrollArea } from '@/components/atoms/scroll-area/ScrollArea';
 
 // Molecules
 import { CardContent, CardFooter, CardHeader } from '@/components/molecules/Card/Card';
-import WorkspaceUpload from '@/components/molecules/workspace-upload/WorkspaceUpload';
 import { useMetProAiContext } from '@/context/MetProAiContext';
 import { useWorkspace } from '@/context/WorkspaceContext';
+import WorkspaceUpload from '../workspace-upload/WorkspaceUpload';
 
 // Lucied React Icons
+import { MetProAiAPI } from '@/lib/api/flask-api';
 import { FileInput, FileText, Link, Plus, Trash2, UploadIcon, X } from 'lucide-react';
 
 interface FileExplorerContentProps {
@@ -187,12 +188,16 @@ const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
         try {
             // Replace with actual delete functionality
             console.log(`Deleting file: ${fileName}`);
-            // This is a placeholder for the actual API call
-            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            const response = await MetProAiAPI.deleteMedicalDocument(fileName)
+
+            if(response){
+            enqueueSnackbar(`File deleted successfully.`, { variant: 'success' });
+
+            }
 
             // Refresh workspace after deletion
             refreshWorkspaces();
-            enqueueSnackbar(`File deleted successfully.`, { variant: 'success' });
         } catch (error) {
             console.error('Delete error:', error);
             enqueueSnackbar(`Failed to delete file.`, { variant: 'error' });
@@ -292,7 +297,7 @@ const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
                                             variant="outline"
                                             size="small"
                                             onClick={addURL}
-                                            sx={{ ml: 1 }}
+                                            sx={{ ml: 1 , width: '100px'}}
                                         >
                                             Add URL
                                         </CustomButton>

@@ -1,7 +1,7 @@
 // src/app/api/delete/medical_documents/[filename]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
-import { unlink } from 'fs/promises';
+import { rm } from 'fs/promises';
 import { existsSync } from 'fs';
 
 export async function DELETE(req: NextRequest) {
@@ -24,7 +24,8 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: 'File not found' }, { status: 404 });
     }
 
-    await unlink(filePath);
+    await rm(filePath);
+    console.log('File deleted:', filePath);
 
     return NextResponse.json({
       message: 'Medical document deleted successfully',

@@ -16,6 +16,7 @@ export const config = {
 // Base directory where uploaded files will be stored
 const BASE_DIR = process.env.BASE_DIR || 'uploads';
 const UPLOAD_DIR = path.join(process.cwd(), BASE_DIR);
+console.log('Upload directory:', UPLOAD_DIR);
 
 // Allowed MIME types for medical document uploads
 const ALLOWED_MIME_TYPES = [
@@ -35,8 +36,8 @@ export async function POST(req: NextRequest) {
     // Get cookies from the request
     const cookies = req.headers.get('cookie') || '';
     const guestId = cookies.split('; ')
-    .find((cookie) => cookie.startsWith('guestId='))
-    ?.split('=')[1];
+      .find((cookie) => cookie.startsWith('guestId='))
+      ?.split('=')[1];
 
 
     if (!guestId) {
@@ -49,10 +50,10 @@ export async function POST(req: NextRequest) {
     }
 
     // Create a directory for the guestId
-   const GUEST_DIR = path.join(UPLOAD_DIR, guestId);
-   if (!existsSync(GUEST_DIR)) {
-     await mkdir(GUEST_DIR, { recursive: true });
-   } 
+    const GUEST_DIR = path.join(UPLOAD_DIR, guestId);
+    if (!existsSync(GUEST_DIR)) {
+      await mkdir(GUEST_DIR, { recursive: true });
+    }
 
     // Check if request content is multipart form data
     const contentType = req.headers.get('content-type') || '';
@@ -70,7 +71,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Create workspace directory under 'medical' folder
-    const WORKSPACE_DIR = path.join(GUEST_DIR, workspaceName, 'medical_documents',);
+    const WORKSPACE_DIR = path.join(UPLOAD_DIR, 'medical_documents', guestId, workspaceName);
     console.log("Workspace directory:", WORKSPACE_DIR);
     if (!existsSync(WORKSPACE_DIR)) {
       await mkdir(WORKSPACE_DIR, { recursive: true });

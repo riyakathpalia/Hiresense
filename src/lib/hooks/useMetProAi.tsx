@@ -112,7 +112,8 @@ export const useMedicalDocument = () => {
                 setLoading(false);
             }
         },
-        [fetchMedicalDocuments]
+        // [fetchMedicalDocuments]
+        []
     );
 
     const deleteMedicalUrl = useCallback(
@@ -189,12 +190,11 @@ export const usePatientDocument = () => {
         try {
             const nextApiResponse = await MetProAiNextAPI.uploadPatientDocumentFiles(files, workspaceName);
             console.log('Patient Documents uploaded:', nextApiResponse);
-            // Refresh the resume list
-            //await fetchResumes();
+            
             const filePaths = nextApiResponse.files.map((file) => file.savedAs);
             console.log('File paths: (useMetProAi)', filePaths);
             MetProAiAPI.uploadPatientDocuments(filePaths, workspaceName);
-            await fetchPatientDocuments();
+            // await fetchPatientDocuments();
             return nextApiResponse;
         } catch (err: unknown) {
             if (axios.isAxiosError(err)) {
@@ -237,16 +237,16 @@ export const usePatientDocument = () => {
     );
 
     const processPatientUrls = useCallback(
-        async (urls: string) => {
+        async (urls: string,workspaceName: string) => {
             setLoading(true);
             setError(null);
             console.log('Processing Patient URLs:', urls);
 
             try {
-                const response = await MetProAiAPI.processPatientUrls(urls);
+                const response = await MetProAiAPI.processPatientUrls(urls,workspaceName);
 
                 // Refresh the document list after processing URLs
-                await fetchPatientDocuments();
+                //await fetchPatientDocuments();
 
                 return response;
             } catch (err: unknown) {
@@ -260,7 +260,8 @@ export const usePatientDocument = () => {
                 setLoading(false);
             }
         },
-        [fetchPatientDocuments]
+        // [fetchPatientDocuments]
+        []
     );
 
     const deletePatientUrl = useCallback(
@@ -308,13 +309,37 @@ export const useMetProAiChat = () => {
     const [error, setError] = useState<string | null>(null);
     const [chatHistory, setChatHistory] = useState<{ message: string; reply: string }[]>([]);
 
-    const sendMessage = useCallback(async (message: string, medicalSearch: boolean = true, workspace_name: string) => {
+    // const sendMessage = useCallback(async (message: string, medicalSearch: boolean = true, workspace_name: string) => {
+    //     setLoading(true);
+    //     setError(null);
+
+    //     try {
+    //         // Simplified to match the API implementation
+    //         const reply = await MetProAiAPI.sendChatMessage(message , medicalSearch, workspace_name);
+
+    //         // Add the message-reply pair to chat history
+    //         setChatHistory((prev) => [...prev, { message, reply }]);
+
+    //         return reply;
+    //     } catch (err: unknown) {
+    //         if (axios.isAxiosError(err)) {
+    //             setError(err.response?.data?.error || 'Failed to send message');
+    //         } else {
+    //             setError('An unexpected error occurred');
+    //         }
+    //         throw err;
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // }, []);
+
+    const sendMessage = useCallback(async (message: string) => {
         setLoading(true);
         setError(null);
 
         try {
             // Simplified to match the API implementation
-            const reply = await MetProAiAPI.sendChatMessage(message , medicalSearch, workspace_name);
+            const reply = await MetProAiAPI.sendChatMessage(message);
 
             // Add the message-reply pair to chat history
             setChatHistory((prev) => [...prev, { message, reply }]);
@@ -344,103 +369,6 @@ export const useMetProAiChat = () => {
         clearChat,
     };
 };
-
-// Custom hook for chat operations
-// export const useHireSenseChat = () => {
-//     const [loading, setLoading] = useState<boolean>(false);
-//     const [error, setError] = useState<string | null>(null);
-//     const [chatHistory, setChatHistory] = useState<{ message: string; reply: string }[]>([]);
-
-//     const sendMessage = useCallback(async (message: string, jdSearch: boolean = true, workspace_name: string) => {
-//         setLoading(true);
-//         setError(null);
-
-//         try {
-//             const response = await MetProAiAPI.sendChatMessage(message, jdSearch, workspace_name);
-
-//             setChatHistory((prev) => [...prev, { message, reply: response.reply }]);
-
-//             return response;
-//         } catch (err: unknown) {
-//             if (axios.isAxiosError(err)) {
-//                 setError(err.response?.data?.error || 'Failed to send message');
-//             } else {
-//                 setError('An unexpected error occurred');
-//             }
-//             throw err;
-//         } finally {
-//             setLoading(false);
-//         }
-//     }, []);
-
-//     const sendKeywordChat = useCallback(async (keyword: string) => {
-//         setLoading(true);
-//         setError(null);
-
-//         try {
-//             const response = await MetProAiAPI.sendKeywordChat(keyword);
-
-//             setChatHistory((prev) => [...prev, { message: `Keyword: ${keyword}`, reply: response.reply }]);
-
-//             return response;
-//         } catch (err: unknown) {
-//             if (axios.isAxiosError(err)) {
-//                 setError(err.response?.data?.error || 'Failed to send keyword chat');
-//             } else {
-//                 setError('An unexpected error occurred');
-//             }
-//             throw err;
-//         } finally {
-//             setLoading(false);
-//         }
-//     }, []);
-
-//     const clearChat = useCallback(() => {
-//         setChatHistory([]);
-//     }, []);
-
-//     return {
-//         loading,
-//         error,
-//         chatHistory,
-//         sendMessage,
-//         sendKeywordChat,
-//         clearChat,
-//     };
-// };
-
-// // Custom hook for system operations
-// export const useHireSenseWorkspace = () => {
-//     const [loading, setLoading] = useState<boolean>(false);
-//     const [error, setError] = useState<string | null>(null);
-
-//     const createNewWorkspace = useCallback(async (workspaceName: string) => {
-//         setLoading(true);
-//         setError(null);
-
-//         try {
-//             const newWorkspaceResponse = await MetProAiNextAPI.createNewWorkspace(workspaceName);
-//             console.log('New Workspace Created:', newWorkspaceResponse);
-//             return newWorkspaceResponse;
-//         } catch (err: unknown) {
-//             if (axios.isAxiosError(err)) {
-//                 setError(err.response?.data?.error || 'Failed to reset data');
-//             } else {
-//                 setError('An unexpected error occurred');
-//             }
-//             throw err;
-//         } finally {
-//             setLoading(false);
-//         }
-//     }, []);
-
-//     return {
-//         loading,
-//         error,
-//         createNewWorkspace,
-//     };
-// };
-
 
 // Custom hook for system operations
 export const useMetProAiSystem = () => {

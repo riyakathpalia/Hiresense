@@ -80,7 +80,6 @@ export const MetProAiAPI = {
     // Delete Medical Document
     deleteMedicalDocument: async (fileName: string): Promise<ApiResponse> => {
         try {
-            // Corrected to match API spec
             const response: AxiosResponse<ApiResponse> = await metProAiApi.post('/delete/delete_medical_file', {
                 file_name: fileName
             });
@@ -93,7 +92,6 @@ export const MetProAiAPI = {
     // Delete Patient Document
     deletePatientDocument: async (fileName: string): Promise<ApiResponse> => {
         try {
-            // Corrected to match API spec
             const response: AxiosResponse<ApiResponse> = await metProAiApi.post('/delete/delete_patient_file', {
                 file_name: fileName
             });
@@ -106,7 +104,6 @@ export const MetProAiAPI = {
     // Delete Medical URL
     deleteMedicalUrl: async (url: string): Promise<ApiResponse> => {
         try {
-            // Added missing function from API spec
             const response: AxiosResponse<ApiResponse> = await metProAiApi.post('/delete/delete_medical_url', {
                 url: url
             });
@@ -119,7 +116,6 @@ export const MetProAiAPI = {
     // Delete Patient URL
     deletePatientUrl: async (url: string): Promise<ApiResponse> => {
         try {
-            // Added missing function from API spec
             const response: AxiosResponse<ApiResponse> = await metProAiApi.post('/delete/delete_patient_url', {
                 url: url
             });
@@ -128,9 +124,10 @@ export const MetProAiAPI = {
             throw handleApiError(error, 'Error deleting patient URL');
         }
     },
+
     // Process Medical URLs
     processMedicalUrls: async (urls: string, workspaceName: string): Promise<ProcessUrlResponse> => {
-        console.log('Uploading medical url: (API - Flask)', urls);
+        console.log('Uploading Medical url: (API - Flask)', urls);
         try {
             // Corrected to match API spec
             const payload = { urls };
@@ -140,12 +137,13 @@ export const MetProAiAPI = {
             );
             return response.data;
         } catch (error) {
-            throw handleApiError(error, 'Error processing medical URLs');
+            throw handleApiError(error, 'Error processing Medical URLs');
         }
     },
 
     // Process Patient URLs
-    processPatientUrls: async (urls: string | string[]): Promise<ProcessUrlResponse> => {
+    processPatientUrls: async (urls: string ,workspaceName: string): Promise<ProcessUrlResponse> => {
+        console.log('Uploading Patient url: (API - Flask)', urls);
         try {
             // Corrected to match API spec
             const payload = { urls };
@@ -155,18 +153,28 @@ export const MetProAiAPI = {
             );
             return response.data;
         } catch (error) {
-            throw handleApiError(error, 'Error processing patient URLs');
+            throw handleApiError(error, 'Error processing Patient URLs');
         }
     },
     
     // Chat with Medical Data
-    sendChatMessage: async (message: string, medicalSearch: boolean = true,workspace_name:string): Promise<string> => {
+    // sendChatMessage: async (message: string, medicalSearch: boolean = true,workspace_name:string): Promise<string> => {
+    //     try {
+    //         // Corrected to match API spec
+    //         const response: AxiosResponse<ChatResponse> = await metProAiApi.post('/chat', { message });
+    //         return response.data.reply; // Updated to match the expected response structure
+    //     } catch (error) {
+    //         throw handleApiError(error, 'Error sending chat message');
+    //     }
+    // },
+
+    sendChatMessage: async (message: string): Promise<string> => {
         try {
-            // Corrected to match API spec
+            console.log('Sending message to medical chat: (API - Flask)', message);
             const response: AxiosResponse<ChatResponse> = await metProAiApi.post('/chat', { message });
-            return response.data.reply; // Updated to match the expected response structure
+            return response.data.reply;
         } catch (error) {
-            throw handleApiError(error, 'Error sending chat message');
+            throw handleApiError(error, 'Error sending medical chat message');
         }
     },
 
